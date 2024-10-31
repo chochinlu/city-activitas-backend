@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.env
+
+# IDE Related
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Log Files
+*.log
+
+# Local Development Configuration
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Database Files
+*.sqlite3
+*.db
+
+# System Files
+.DS_Store
+Thumbs.db
