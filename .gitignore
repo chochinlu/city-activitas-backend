@@ -48,3 +48,6 @@ ENV/
 # System Files
 .DS_Store
 Thumbs.db
+
+*.tsv
+*.csv
