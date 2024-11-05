@@ -136,3 +136,23 @@ VALUES
 
     -- A21
     (21, '446', '市有土地', 2293.52, '零售市場用地', NULL, '空置', 100, '雜木、綠地');
+
+
+-- 後來加上 created_at, updated_at, deleted_at 
+-- 1. 新增欄位
+ALTER TABLE land_details 
+ADD COLUMN created_at TIMESTAMP,
+ADD COLUMN updated_at TIMESTAMP,
+ADD COLUMN deleted_at TIMESTAMP;
+
+-- 2. 設定預設值
+UPDATE land_details 
+SET created_at = NOW(),
+    updated_at = NOW();
+
+-- 3. 設定 NOT NULL 約束和預設值
+ALTER TABLE land_details 
+ALTER COLUMN created_at SET NOT NULL,
+ALTER COLUMN created_at SET DEFAULT NOW(),
+ALTER COLUMN updated_at SET NOT NULL,
+ALTER COLUMN updated_at SET DEFAULT NOW();
