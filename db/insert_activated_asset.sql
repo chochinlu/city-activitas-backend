@@ -1401,3 +1401,231 @@ WHERE a.year = 107
 AND a.location = '柳科工業區暨環保園區育成中心3樓實驗室廠房(編號304及305)'
 AND ag.name IN ('工務局', '勞工局');
 
+
+
+INSERT INTO agencies (name, note) VALUES
+('南區國稅局', '財政部')
+ON CONFLICT (name) DO NOTHING;
+
+
+-- 108
+-- 建立一般的一對一關聯
+INSERT INTO activated_asset_demand_agencies 
+(activated_asset_id, agency_id)
+SELECT 
+    a.id as activated_asset_id,
+    ag.id as agency_id
+FROM activated_assets a
+LEFT JOIN agencies ag ON CASE 
+    WHEN a.location = '安南區長和段341-2地號(原大同平宅用地)' THEN ag.name = '教育局'
+    WHEN a.location = '柳科工業區暨環保園區育成中心3樓實驗室廠房(編號306)' THEN ag.name = '勞工局'
+    WHEN a.location = '柳科工業區暨環保園區育成中心3樓實驗室廠房(編號307)' THEN ag.name = '都市發展局'
+    WHEN a.location = '新營區中正路37巷178號(稅務局宿舍)' THEN ag.name = '都市發展局'
+    WHEN a.location = '麻豆區市三公有零售市場地下室' THEN ag.name = '社會局'
+    WHEN a.location = '北區光武里活動中心2樓' THEN ag.name = '社會局'
+    WHEN a.location = '柳科工業區暨環保園區育成中心1樓實驗室廠房(編號112)' THEN ag.name = '工務局'
+    WHEN a.location = '中西區建國里活動中心及善化區南關里活動中心2樓' THEN ag.name = '社會局'
+    WHEN a.location = '北區大興里活動中心2樓' THEN ag.name = '民政局'
+    WHEN a.location = '中西區天后里活動中心' THEN ag.name = '社會局'
+    WHEN a.location = '新營區東興段503、504地號土地及大同路78巷13號宿舍' THEN ag.name = '新營區公所'
+    WHEN a.location = '中西區星鑽段1939地號市有土地' THEN ag.name = '警察局'
+    WHEN a.location = '警察局白河分局河東派出所' THEN ag.name = '環境保護局'
+    WHEN a.location = '友愛市場4樓' THEN ag.name = '智慧發展中心'
+    WHEN a.location = '財政稅務局安南分局2、3樓' THEN ag.name = '南區國稅局'
+    WHEN a.location = '財政稅務局新營分局2-4樓' THEN ag.name = '南區國稅局'
+    WHEN a.location = '財政稅務局佳里分局3、4樓' THEN ag.name = '南區國稅局'
+    WHEN a.location = '原水仙里活動中心' THEN ag.name = '工務局'
+    WHEN a.location = '原中西區北勢里活動中心' THEN ag.name = '文化局'
+    WHEN a.location = '永康區西灣里活動中心2樓' THEN ag.name = '社會局'
+END
+WHERE a.year = 108;
+
+-- 處理多對多關聯（南瀛綠都心地下室丙梯）
+INSERT INTO activated_asset_demand_agencies 
+(activated_asset_id, agency_id)
+SELECT 
+    a.id as activated_asset_id,
+    ag.id as agency_id
+FROM activated_assets a
+CROSS JOIN agencies ag
+WHERE a.year = 108 
+AND a.location = '南瀛綠都心地下室丙梯'
+AND ag.name IN ('社會局', '工務局');
+
+
+
+-- 109
+-- 建立已活化資產與需求機關的關聯
+INSERT INTO activated_asset_demand_agencies 
+(activated_asset_id, agency_id)
+SELECT 
+    a.id as activated_asset_id,
+    ag.id as agency_id
+FROM activated_assets a
+LEFT JOIN agencies ag ON CASE 
+    WHEN a.location = '北區大道社區活動中心3、4樓' THEN ag.name = '社會局'
+    WHEN a.location = '東區精忠段143、146地號部分市有土地' THEN ag.name = '警察局'
+    WHEN a.location = '麻豆區保安段992、994、995地號市有土地' THEN ag.name = '衛生局'
+    WHEN a.location = '永康區埔園龍埔里活動中心2樓' THEN ag.name = '社會局'
+    WHEN a.location = '北區大豐里活動中心2樓' THEN ag.name = '北區區公所'
+    WHEN a.location = '鹽水公有零售市場3樓' THEN ag.name = '社會局'
+    WHEN a.location = '七股區城內里活動中心2樓' THEN ag.name = '七股區公所'
+    WHEN a.location = '仁德區體育公園體育館1樓' THEN ag.name = '工務局'
+    WHEN a.location = '中西區新美段867地號內及868地號市有土地' THEN ag.name = '停車管理處'
+    WHEN a.location = '玉井區三埔里活動中心1樓' THEN ag.name = '玉井區公所'
+    WHEN a.location = '中西區南美里活動中心3樓教室' THEN ag.name = '中西區公所'
+    WHEN a.location = '中西區郡王里活動中心1樓辦公室' THEN ag.name = '中西區公所'
+    WHEN a.location = '新營區中正路5號及區東區富德街23號辦公室' THEN ag.name = '警察局'
+    WHEN a.location = '東區巴克禮紀念公園自然環境教育中心' THEN ag.name = '工務局'
+    WHEN a.location = '佳里區佳安東路10號(佳里多摩市)' THEN ag.name = '社會局'
+END
+WHERE a.year = 109;
+
+
+-- 110
+-- 建立已活化資產與需求機關的關聯
+INSERT INTO activated_asset_demand_agencies 
+(activated_asset_id, agency_id)
+SELECT 
+    a.id as activated_asset_id,
+    ag.id as agency_id
+FROM activated_assets a
+LEFT JOIN agencies ag ON CASE 
+    WHEN a.location = '六甲公有零售市場2樓部分空間(丙區)(面積1,294㎡)' THEN ag.name = '社會局'
+    WHEN a.location = '新化區知義里及唪口里活動中心1樓' THEN ag.name = '新化區公所'
+    WHEN a.location = '安南區長和段192、240、250地號(原大同平宅基地)' THEN ag.name = '警察局'
+    WHEN a.location = '中西區星鑽段2410地號內市有土地(面積1,852㎡)' THEN ag.name = '交通局'
+    WHEN a.location = '中西區星鑽段1313、1313-1地號' THEN ag.name = '交通局'
+    WHEN a.location = '關廟區關廟場建物北花段307地號及176-1建號' THEN ag.name = '關廟區公所'
+    WHEN a.location IN ('歸仁區市場2樓西側空間(面積661.16㎡)', '原消防局鹽水分隊辦公室', '安南區警察局原安順派出所', '北區消防局公園分隊辦公室') THEN ag.name = '衛生局'
+    WHEN a.location = '善化區市場2樓(面積462.24㎡)' THEN ag.name = '勞工局'
+    WHEN a.location LIKE '中西區新美段867、868、873地號%' THEN ag.name = '中西區公所'
+    WHEN a.location = '下營區營平段259、259-2地號內市有土地(面積315.46、154.42㎡)' THEN ag.name = '下營區公所'
+    WHEN a.location = '中西區星鑽段1478地號內市有土地(面積161.66㎡)' THEN ag.name = '中西區衛生所'
+    WHEN a.location = '新營區中正路37巷178號(稅務局宿舍)' THEN ag.name = '新營區公所'
+    WHEN a.location = '東山區東興段198-4、198-5地號市有土地' THEN ag.name = '東山區公所'
+    WHEN a.location = '仁德區保甲段356、356-1、356-2地號市有土地' THEN ag.name = '仁德區公所'
+    WHEN a.location = '南瀛綠都心丙梯D、E及乙梯工務局舊辦公室地下室內(面積37.51、42.24、80㎡)' THEN ag.name = '教育局'
+    WHEN a.location = '玉井區玉中段480地號市有土地(面積128.56㎡)' THEN ag.name = '玉井區公所'
+    WHEN a.location = '新營區三民路100號閒置宿舍' THEN ag.name = '警察局'
+    WHEN a.location IN ('安平區漁光里活動中心2樓辦公室(面積101.55㎡)', '柳營區新厝里活動中心1樓(面積407.9㎡)', '仁德區太子土庫里活動中心3樓(面積339.10㎡)') THEN ag.name = '民政局'
+    WHEN a.location = '新化區王公廟小段1105-1地號市有土地(面積3595㎡)' THEN ag.name = '環境保護局'
+    WHEN a.location = '南瀛綠都心地下室青創基地空間C內(面積63.53㎡)' THEN ag.name = '工務局'
+    WHEN a.location IN ('中西區星鑽段1451、1439、1440、1433地號市有土地(面積285.80、183.39、239.75、169.01㎡)', '中西區玉宇段124地號市有土地(面積187.31㎡)') THEN ag.name = '中西區公所'
+    WHEN a.location IN ('中西區星鑽段2374、2376、2376-1地號市有土地及南華街98號旁市有房屋(面積136.5㎡)', '關廟區老人文康中心1樓(面積561.5㎡)', '東區龍山社區活動中心3樓會議室(二)(面積105㎡)', '東區仁和里活動中心2樓(面積123.2㎡)') THEN ag.name = '社會局'
+END
+WHERE a.year = 110;
+
+
+INSERT INTO agencies (name, note) VALUES
+('南市區漁會', '漁會'),
+('府城客運公司', '客運'),
+('國光客運公司', '客運'),
+('漢程客運公司', '客運')
+ON CONFLICT (name) DO NOTHING;
+
+
+-- 111 
+-- 建立已活化資產與需求機關的關聯
+INSERT INTO activated_asset_demand_agencies 
+(activated_asset_id, agency_id)
+SELECT 
+    a.id as activated_asset_id,
+    ag.id as agency_id
+FROM activated_assets a
+LEFT JOIN agencies ag ON CASE 
+    WHEN a.location = '龍崎區龍船活動中心1樓' THEN ag.name = '龍崎區公所'
+    WHEN a.location = '消防局第五救災救護大隊大灣分隊辦公廳舍(永康區)(425.85面積㎡)' THEN ag.name = '警察局'
+    WHEN a.location = '中西區府前路二段370號(原移民署)(面積168.27㎡)' THEN ag.name = '環境保護局'
+    WHEN a.location = '新營區原警察局少年隊4樓(新營區埤寮59-8號)(面積673.95㎡)' THEN ag.name = '農業局'
+    WHEN a.location = '學甲區集合段1177及1178地號市有土地(面積1755.49㎡)' THEN ag.name = '社會局'
+    WHEN a.location = '善化區善化市場2樓C區(面積112.32㎡)(善化區中山路377號2樓)' THEN ag.name = '都市發展局'
+    WHEN a.location = '中西區環河街56號(面積189.06㎡)(星鑽段2229地號及3310建號市有房地)' THEN ag.name = '南市區漁會'
+    WHEN a.location = '仁德區崁腳北段1260、1261、 1267-1地號(面積2912.64㎡)' THEN ag.name = '府城客運公司'
+    WHEN a.location = '仁德區崁腳北段 1267-1地號(面積6750.31㎡)' THEN ag.name = '國光客運公司'
+    WHEN a.location = '仁德區崁腳北段1259地號(面積1536.32㎡)' THEN ag.name = '漢程客運公司'
+    WHEN a.location IN ('善化區善化市場2樓A、B區及西側空間(面積595㎡)', '原關廟區環保局辦公室2、3樓關廟區仁愛段1147、1148地號') THEN ag.name = '衛生局'
+    WHEN a.location IN ('七股區義合里多功能活動中心(面積222.926㎡)', '七股區龍山里漁民活動中心(面積635.3㎡)') THEN ag.name = '七股區公所'
+    WHEN a.location = '安平區漁光里活動中心2樓辦公室及2樓教室4(增加面積31.39㎡)' THEN ag.name = '安平區公所'
+    WHEN a.location = '將軍區西和社區活動中心1樓(面積389.35㎡)' THEN ag.name = '將軍區公所'
+    WHEN a.location = '仁德區中軍段923地號(面積9231.73㎡)' THEN ag.name = '消防局'
+    WHEN a.location = '東山頂田社區活動中心東山區頂田段234地號(面積481.16㎡)' THEN ag.name = '東山區公所'
+END
+WHERE a.year = 111;
+
+
+-- 112 
+-- 建立已活化資產與需求機關的關聯
+INSERT INTO activated_asset_demand_agencies 
+(activated_asset_id, agency_id)
+SELECT 
+    a.id as activated_asset_id,
+    ag.id as agency_id
+FROM activated_assets a
+LEFT JOIN agencies ag ON CASE 
+    WHEN a.location = '北區實踐社區活動中心2樓(面積197.8㎡)' THEN ag.name = '北區區公所'
+    WHEN a.location = '中西區友愛市場2樓(面積1282.9m²)' THEN ag.name = '研究發展考核委員會'
+    WHEN a.location = '山上區山上里農民教育活動中心2樓(面積303.3m²)' THEN ag.name = '山上區公所'
+    WHEN a.location = '安平區遊憩碼頭建築物2樓(面積:72m²)' THEN ag.name = '觀光旅遊局'
+    WHEN a.location = '安南區海北段375地號' THEN ag.name = '文化資產管理處'
+    WHEN a.location LIKE '南區殯儀館永安門旁建物%' THEN ag.name = '殯葬管理所'
+    WHEN a.location = '善化區善化市場二樓西側(面積約80坪)' THEN ag.name = '地政局'
+    WHEN a.location = '新營區中正路37巷150號、168號、172號宿舍' THEN ag.name = '文化局'
+    WHEN a.location IN (
+        '東區竹篙厝段1682地號(部分)公開標租(星期一至五)暨專案出租(星期六、日)',
+        '北區北安段743-2地號、南區鹽埕段290-942、290-943地號內及白河區中興段1745地號'
+    ) THEN ag.name = '財政稅務局'
+    WHEN a.location = '龍崎區龍船派出所1樓部分(面積:58.2m²)及2樓(面積:116.4m²)' THEN ag.name = '消防局'
+    WHEN a.location IN (
+        '新市區大社社區活動中心1樓(面積：322.5m2)',
+        '新市區文康育樂中心2樓'
+    ) THEN ag.name = '新市區公所'
+    WHEN a.location = '龍崎舊公有零售市場1樓(面積：636.8m2)' THEN ag.name = '龍崎區公所'
+    WHEN a.location = '麻豆區總榮里活動中心2樓' THEN ag.name = '社會局'
+END
+WHERE a.year = 112;
+
+-- 113
+-- 建立已活化資產與需求機關的關聯
+INSERT INTO activated_asset_demand_agencies 
+(activated_asset_id, agency_id)
+SELECT 
+    a.id as activated_asset_id,
+    ag.id as agency_id
+FROM activated_assets a
+LEFT JOIN agencies ag ON CASE 
+    WHEN a.location = '原警察局新化分局岡林派出所(面積：144.4m2)' THEN ag.name = '左鎮區公所'
+    WHEN a.location = '新營區微型創新教育體驗基地' THEN ag.name = '新營區公所'
+    WHEN a.location = '警察局歸仁分局龍船派出所2樓' THEN ag.name = '消防局'
+    WHEN a.location = '南區灣裡聯合里活動中心1樓部分場地(面積：96.59㎡)' THEN ag.name = '南區區公所'
+    WHEN a.location IN (
+        '中西區中頭社區活動中心2樓辦公室(面積：73㎡)',
+        '中西區南廠里活動中心2樓辦公室(面積：19.2㎡)'
+    ) THEN ag.name = '中西區公所'
+    WHEN a.location IN (
+        '六甲區六甲段4-8及4-11地號市有土地',
+        '新營區武昌街3號1樓辦公室及東區富德街23號辦公室'
+    ) THEN ag.name = '警察局'
+    WHEN a.location IN (
+        '永康區五王段116-5地號市有土地',
+        '永康區永二段240-1及241-1地號市有土地',
+        '永康區平道段105地號市有土地',
+        '永康區永安段11地號'
+    ) THEN ag.name = '永康區公所'
+    WHEN a.location = '新營區忠政段101地號市有土地' THEN ag.name = '秘書處'
+    WHEN a.location = '西港區双營段1653地號市有土地' THEN ag.name = '西港區公所'
+    WHEN a.location IN (
+        '安南區塭南里活動中心2樓',
+        '安平區第三幼兒園1及2樓',
+        '安平區第三幼兒園3及4樓',
+        '北區文元文成元美里聯合活動中心四樓教室B'
+    ) THEN ag.name = '社會局'
+    WHEN a.location = '安定區安定段1074-2地號等37筆土地' THEN ag.name = '工務局'
+    WHEN a.location = '安南區長和段1072、1074及1075地號市有土地' THEN ag.name = '臺南市市場處'
+    WHEN a.location IN (
+        '官田區鎮北段865及866地號市有土地',
+        '官田區番子田段740地號等6筆土地'
+    ) THEN ag.name = '官田區公所'
+    WHEN a.location = '北區大和社區活動中心2樓' THEN ag.name = '北區區公所'
+END
+WHERE a.year = 113;
