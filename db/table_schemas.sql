@@ -206,7 +206,7 @@ COMMENT ON COLUMN building_details.vacancy_rate IS '空置比例，例如：100'
 COMMENT ON COLUMN building_details.note IS '例如：2樓空置、3樓部分空間約400坪提供給使用';
 
 
-// 建物土地關聯表
+-- // 建物土地關聯表
 -- Table building_land_details {
 --   id SERIAL [pk]
 --   asset_id INTEGER [ref: > assets.id]
@@ -216,7 +216,6 @@ COMMENT ON COLUMN building_details.note IS '例如：2樓空置、3樓部分空�
 --   created_at TIMESTAMP [note: '建立時間']
 --   updated_at TIMESTAMP [note: '更新時間']
 -- }
-
 
 CREATE TABLE building_land_details (
     id SERIAL PRIMARY KEY,
@@ -235,3 +234,122 @@ COMMENT ON COLUMN building_land_details.asset_id IS '資產 ID';
 COMMENT ON COLUMN building_land_details.lot_number IS '地號';
 COMMENT ON COLUMN building_land_details.land_type IS '土地種類 (市有土地/國有土地/私有土地)';
 COMMENT ON COLUMN building_land_details.land_manager IS '土地管理者';
+
+
+-- // 資產使用類型資料表
+-- Table usage_types {
+--   id integer [pk, increment]
+--   name varchar [not null, unique]  // 例如：停車場、親子育兒設施、辦公廳舍/行政空間
+--   note text
+
+--   indexes {
+--     name
+--   }
+-- }
+
+-- // 資產使用類型資料表
+CREATE TABLE usage_types (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR NOT NULL UNIQUE,
+    note TEXT
+);
+
+-- 建立索引
+CREATE INDEX idx_usage_types_name ON usage_types(name);
+
+-- 添加欄位註釋
+COMMENT ON TABLE usage_types IS '資產使用類型資料表';
+COMMENT ON COLUMN usage_types.name IS '例如：停車場、親子育兒設施、辦公廳舍/行政空間';
+
+
+-- // 已活化資產與需求機關關聯表
+CREATE TABLE activated_asset_demand_agencies (
+    id SERIAL PRIMARY KEY,
+    activated_asset_id INTEGER NOT NULL REFERENCES activated_assets(id),
+    agency_id INTEGER NOT NULL REFERENCES agencies(id),
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    -- 確保不會重複關聯
+    UNIQUE(activated_asset_id, agency_id)
+);
+
+-- 建立索引
+CREATE INDEX idx_activated_asset_demand_agencies_activated_asset_id 
+    ON activated_asset_demand_agencies(activated_asset_id);
+CREATE INDEX idx_activated_asset_demand_agencies_agency_id 
+    ON activated_asset_demand_agencies(agency_id);
+
+-- 添加欄位註釋
+COMMENT ON TABLE activated_asset_demand_agencies IS '已活化資產與需求機關關聯表';
+COMMENT ON COLUMN activated_asset_demand_agencies.activated_asset_id IS '已活化資產ID';
+COMMENT ON COLUMN activated_asset_demand_agencies.agency_id IS '需求機關ID';
+
+
+
+-- // 已活化資產資料表
+-- Table activated_assets {
+--   id integer [pk, increment]
+--   asset_id integer [ref: > assets.id]
+--   year integer [not null]         // 年度, 例如：107、108、109
+--   location TEXT,                  // 地點說明, asset的補充地點說明
+--   is_supplementary boolean        // 捕列, 是否為補列
+--   supplementary_year integer      // 補列年度, 例如：106、107、108
+--   usage_plan text                // 計畫用途, 例如：供鹽水區公所開闢停車場使用
+--   usage_type_id integer [ref: > usage_types.id]  // 計畫用途類別, 關聯到資產使用類型表
+--   demand_agency_id integer [ref: > agencies.id]  // 需求機關, 例如: 警察局
+--   land_value decimal             // 土地公告現值
+--   building_value decimal         // 房屋課稅現值
+--   benefit_value decimal          // 節流效益(元)
+--   is_counted boolean [not null]  // 列入計算: Y/M
+--   note text                     // 備註
+--   status varchar [not null]      // 例如：進行中、已終止
+--   start_date date [not null]     // 活化開始日期
+--   end_date date                  // 活化結束日期（若仍在進行中則為 null）
+
+--   indexes {
+--     asset_id
+--     year
+--     usage_type_id
+--     demand_agency_id
+--   }
+-- }
+
+-- // 已活化資產資料表
+CREATE TABLE activated_assets (
+    id SERIAL PRIMARY KEY,
+    asset_id INTEGER REFERENCES assets(id),  -- 可為空
+    year INTEGER NOT NULL,
+    location TEXT,                -- 地點說明, asset的補充地點說明
+    is_supplementary BOOLEAN,
+    supplementary_year INTEGER,
+    usage_plan TEXT,
+    usage_type_id INTEGER REFERENCES usage_types(id),
+    -- 移除 demand_agency_id 欄位
+    land_value DECIMAL,
+    building_value DECIMAL,
+    benefit_value DECIMAL,
+    is_counted BOOLEAN NOT NULL,
+    note TEXT,
+    status VARCHAR NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE
+);
+
+-- 建立索引
+CREATE INDEX idx_activated_assets_asset_id ON activated_assets(asset_id);
+CREATE INDEX idx_activated_assets_year ON activated_assets(year);
+CREATE INDEX idx_activated_assets_usage_type_id ON activated_assets(usage_type_id);
+
+-- 添加欄位註釋
+COMMENT ON TABLE activated_assets IS '已活化資產資料表';
+COMMENT ON COLUMN activated_assets.year IS '年度，例如：107、108、109';
+COMMENT ON COLUMN activated_assets.is_supplementary IS '是否為補列';
+COMMENT ON COLUMN activated_assets.supplementary_year IS '補列年度，例如：106、107、108';
+COMMENT ON COLUMN activated_assets.usage_plan IS '計畫用途，例如：供鹽水區公所開闢停車場使用';
+COMMENT ON COLUMN activated_assets.land_value IS '土地公告現值';
+COMMENT ON COLUMN activated_assets.building_value IS '房屋課稅現值';
+COMMENT ON COLUMN activated_assets.benefit_value IS '節流效益(元)';
+COMMENT ON COLUMN activated_assets.is_counted IS '列入計算：Y/N';
+COMMENT ON COLUMN activated_assets.status IS '例如：進行中、已終止';
+COMMENT ON COLUMN activated_assets.start_date IS '活化開始日期';
+COMMENT ON COLUMN activated_assets.end_date IS '活化結束日期（若仍在進行中則為 null）';
