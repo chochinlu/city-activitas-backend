@@ -353,3 +353,51 @@ COMMENT ON COLUMN activated_assets.is_counted IS '列入計算：Y/N';
 COMMENT ON COLUMN activated_assets.status IS '例如：進行中、已終止';
 COMMENT ON COLUMN activated_assets.start_date IS '活化開始日期';
 COMMENT ON COLUMN activated_assets.end_date IS '活化結束日期（若仍在進行中則為 null）';
+
+
+-- // 資產活化歷史紀錄表
+-- Table activation_history {
+--   id integer [pk, increment]
+--   asset_id integer [ref: > assets.id]
+--   activated_asset_id integer [ref: > activated_assets.id]
+--   status varchar [not null]      // 例如：啟動、終止
+--   change_date date [not null]    // 狀態變更日期
+--   reason text                    // 變更原因
+--   note text                      // 備註
+--   created_at timestamp [default: `CURRENT_TIMESTAMP`]
+--   created_by integer            // 建立者ID
+
+--   indexes {
+--     asset_id
+--     activated_asset_id
+--     status
+--     change_date
+--   }
+-- }
+
+-- // 資產活化歷史紀錄表
+CREATE TABLE activation_history (
+    id SERIAL PRIMARY KEY,
+    asset_id INTEGER REFERENCES assets(id),
+    activated_asset_id INTEGER REFERENCES activated_assets(id),
+    status VARCHAR NOT NULL,
+    change_date DATE NOT NULL,
+    reason TEXT,
+    note TEXT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by INTEGER
+);
+
+-- 建立索引
+CREATE INDEX idx_activation_history_asset_id ON activation_history(asset_id);
+CREATE INDEX idx_activation_history_activated_asset_id ON activation_history(activated_asset_id);
+CREATE INDEX idx_activation_history_status ON activation_history(status);
+CREATE INDEX idx_activation_history_change_date ON activation_history(change_date);
+
+-- 添加欄位註釋
+COMMENT ON TABLE activation_history IS '資產活化歷史紀錄表';
+COMMENT ON COLUMN activation_history.status IS '例如：啟動、終止';
+COMMENT ON COLUMN activation_history.change_date IS '狀態變更日期';
+COMMENT ON COLUMN activation_history.reason IS '變更原因';
+COMMENT ON COLUMN activation_history.note IS '備註';
+COMMENT ON COLUMN activation_history.created_by IS '建立者ID';
