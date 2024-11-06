@@ -266,7 +266,7 @@ COMMENT ON COLUMN usage_types.name IS '例如：停車場、親子育兒設施�
 CREATE TABLE activated_asset_demand_agencies (
     id SERIAL PRIMARY KEY,
     activated_asset_id INTEGER NOT NULL REFERENCES activated_assets(id),
-    agency_id INTEGER NOT NULL REFERENCES agencies(id),
+    agency_id INTEGER REFERENCES agencies(id),
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
     -- 確保不會重複關聯

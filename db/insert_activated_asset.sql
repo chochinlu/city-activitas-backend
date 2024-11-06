@@ -1070,3 +1070,334 @@ VALUES
 (113, '新營區武昌街3號1樓辦公室及東區富德街23號辦公室', false, '出租予臺南市大台南警察之友會及台南市警察之友會作辦公室使用', 
     (SELECT id FROM usage_types WHERE name='辦公廳舍/行政空間'), 
     2590133, 77820, 2667953, true, '進行中', '2024-01-01');
+
+
+
+-- 先建立需求機關資料
+INSERT INTO agencies (name) VALUES
+('警察局'),
+('社會局'),
+('市場處'),
+('工務局'),
+('消防局'),
+('南區區公所'),
+('農業局'),
+('交通局'),
+('健保局')
+ON CONFLICT (name) DO NOTHING;
+
+-- 建立已活化資產與需求機關的關聯
+INSERT INTO activated_asset_demand_agencies 
+(activated_asset_id, agency_id)
+VALUES
+-- 100-1 警察局
+((SELECT id FROM activated_assets WHERE year = 100 AND location = '舊安南地政事務所'),
+ (SELECT id FROM agencies WHERE name = '警察局')),
+
+-- 100-2 警察局
+((SELECT id FROM activated_assets WHERE year = 100 AND location = '東門派出所'),
+ (SELECT id FROM agencies WHERE name = '警察局')),
+
+-- 100-3 警察局
+((SELECT id FROM activated_assets WHERE year = 100 AND location = '原臺南縣團管區'),
+ (SELECT id FROM agencies WHERE name = '警察局')),
+
+-- 100-4 社會局
+((SELECT id FROM activated_assets WHERE year = 100 AND location = '原崎內國小'),
+ (SELECT id FROM agencies WHERE name = '社會局')),
+
+-- 100-5 社會局
+((SELECT id FROM activated_assets WHERE year = 100 AND location = '佳里代表會2樓'),
+ (SELECT id FROM agencies WHERE name = '社會局')),
+
+-- 100-6 市場處
+((SELECT id FROM activated_assets WHERE year = 100 AND location = '仁德第一市場4樓'),
+ (SELECT id FROM agencies WHERE name = '臺南市市場處')),
+
+-- 100-7 工務局
+((SELECT id FROM activated_assets WHERE year = 100 AND location = '東區竹篙厝段1684地號土地'),
+ (SELECT id FROM agencies WHERE name = '工務局')),
+
+-- 100-8 工務局
+((SELECT id FROM activated_assets WHERE year = 100 AND location = '臺南地政事務所4樓部分空間'),
+ (SELECT id FROM agencies WHERE name = '工務局')),
+
+-- 100-9 消防局
+((SELECT id FROM activated_assets WHERE year = 100 AND location = '台南市佳里區潭墘段617地號'),
+ (SELECT id FROM agencies WHERE name = '消防局')),
+
+-- 100-10 消防局
+((SELECT id FROM activated_assets WHERE year = 100 AND location = '台南市楠西區東勢段532地號'),
+ (SELECT id FROM agencies WHERE name = '消防局')),
+
+-- 100-11 消防局
+((SELECT id FROM activated_assets WHERE year = 100 AND location = '北區北元段1059地號'),
+ (SELECT id FROM agencies WHERE name = '消防局')),
+
+-- 100-12 南區區公所
+((SELECT id FROM activated_assets WHERE year = 100 AND location = '文華公有零售市場二樓'),
+ (SELECT id FROM agencies WHERE name = '南區區公所')),
+
+-- 100-13 農業局
+((SELECT id FROM activated_assets WHERE year = 100 AND location = '民治市政中心世紀大樓三樓'),
+ (SELECT id FROM agencies WHERE name = '農業局')),
+
+-- 100-14 交通局
+((SELECT id FROM activated_assets WHERE year = 100 AND location = '元安里活動中心'),
+ (SELECT id FROM agencies WHERE name = '交通局')),
+
+-- 100-15 健保局
+((SELECT id FROM activated_assets WHERE year = 100 AND location = '台南市中西區廣慈段547地號'),
+ (SELECT id FROM agencies WHERE name = '健保局'));
+
+INSERT INTO agencies (name) VALUES
+('交通部觀光署')
+ON CONFLICT (name) DO NOTHING;
+
+
+-- 建立已活化資產與需求機關的關聯
+INSERT INTO activated_asset_demand_agencies 
+(activated_asset_id, agency_id)
+SELECT 
+    a.id as activated_asset_id,
+    ag.id as agency_id
+FROM activated_assets a
+LEFT JOIN agencies ag ON CASE 
+    WHEN a.location = '中西區友愛公有零售市場2、3樓' THEN ag.name = '經濟發展局'
+    WHEN a.location = '第一幼稚園北門分園' THEN ag.name = '工務局'
+    WHEN a.location = '安平區海興公有零售市場' THEN ag.name = '安平區公所'
+    WHEN a.location = '本淵寮公有零售市場2、3樓' THEN ag.name = '秘書處'
+    WHEN a.location = '善化第一公有零售市場2樓' THEN ag.name = '水利局'
+    WHEN a.location = '原關廟原代表會2、3樓' THEN ag.name = '環保局'
+    WHEN a.location = '北門區永華國小' THEN ag.name = '交通部觀光署'
+    WHEN a.location = '台南市關廟區民生段570地號' THEN ag.name = '交通局'
+    WHEN a.location = '永康原代表會3樓' THEN ag.name = '社會局'
+END
+WHERE a.year = 101;
+
+INSERT INTO activated_asset_demand_agencies 
+(activated_asset_id, agency_id)
+SELECT 
+    a.id as activated_asset_id,
+    ag.id as agency_id
+FROM activated_assets a
+LEFT JOIN agencies ag ON CASE 
+    WHEN a.location = '麻豆果菜市場' THEN ag.name = '交通局'
+    WHEN a.location = '佳里區原法務部調查局臺南市調查處' THEN ag.name = '佳里區公所'
+    WHEN a.location = '台南市仁德區車頭段185、291、292及296地號' THEN ag.name = '交通局'
+    WHEN a.location = '中西區「機25」臨安段1082-1及1082-2地號' THEN ag.name = '交通局'
+    WHEN a.location = '永新社區活動中心3樓' THEN ag.name = '原住民族事務委員會'
+    WHEN a.location = '台南市仁德區崁腳段380-31、32、33、34、35、41、43地號(以上全部土地)、同段380-29 、30地號(以上部分土地)' THEN ag.name = '交通局'
+    WHEN a.location = '柳營原代表會2、3樓' THEN ag.name = '工務局'
+    WHEN a.location = '台南市鹽水區仁愛段159-1、176、176-1、176-2、177、177-1、178及179-1地號' THEN ag.name = '消防局'
+    WHEN a.location = '台南市鹽水區仁愛段268地號' THEN ag.name = '環保局'
+    WHEN a.location = '原西港代表會' THEN ag.name = '西港區公所'
+END
+WHERE a.year = 102;
+
+
+-- 建立一般的一對一關聯
+INSERT INTO activated_asset_demand_agencies 
+(activated_asset_id, agency_id)
+SELECT 
+    a.id as activated_asset_id,
+    ag.id as agency_id
+FROM activated_assets a
+LEFT JOIN agencies ag ON CASE 
+    WHEN a.location = '友愛公有零售市場4樓' THEN ag.name = '警察局'
+    WHEN a.location = '麻豆市三公有零售市場3樓' THEN ag.name = '社會局'
+    WHEN a.location = '新化區公所2樓' THEN ag.name = '工務局'
+    WHEN a.location = '原學甲代表會' THEN ag.name = '學甲區公所'
+    WHEN a.location = '開元市場3樓' THEN ag.name = '社會局'
+    WHEN a.location = '平通市場1樓及地下停車場' THEN ag.name = '交通局'
+    WHEN a.location = '仁德區正義段953建號' THEN ag.name = '仁德區公所'
+    WHEN a.location = '柳營小腳腿多功能活動中心2樓' THEN ag.name = '社會局'
+    WHEN a.location = '柳營科技工業區暨環保科技園區之管研大樓3樓' THEN ag.name = '文化局'
+    WHEN a.location = '新化段王公廟小段1105地號' THEN ag.name = '環保局'
+END
+WHERE a.year = 103;
+
+-- 處理多對多關聯（原官田代表會）
+INSERT INTO activated_asset_demand_agencies 
+(activated_asset_id, agency_id)
+SELECT 
+    a.id as activated_asset_id,
+    ag.id as agency_id
+FROM activated_assets a
+CROSS JOIN agencies ag
+WHERE a.year = 103 
+AND a.location = '原官田代表會'
+AND ag.name IN ('環保局', '官田區公所');
+
+-- 處理多對多關聯（仁德第二圖書館）
+INSERT INTO activated_asset_demand_agencies 
+(activated_asset_id, agency_id)
+SELECT 
+    a.id as activated_asset_id,
+    ag.id as agency_id
+FROM activated_assets a
+CROSS JOIN agencies ag
+WHERE a.year = 103 
+AND a.location = '仁德第二圖書館'
+AND ag.name IN ('工務局', '大甲國小', '仁德區公所');
+
+
+INSERT INTO agencies (name, note) VALUES
+('奇美醫院', '醫院')
+ON CONFLICT (name) DO NOTHING;
+
+-- 建立一般的一對一關聯
+INSERT INTO activated_asset_demand_agencies 
+(activated_asset_id, agency_id)
+SELECT 
+    a.id as activated_asset_id,
+    ag.id as agency_id
+FROM activated_assets a
+LEFT JOIN agencies ag ON CASE 
+    WHEN a.location = '原新營代表會' THEN ag.name = '社會局'
+    WHEN a.location = '西港區老人文康活動中心2樓' THEN ag.name = '社會局'
+    WHEN a.location = '佳里代表會1樓' THEN ag.name = '社會局'
+    WHEN a.location = '關廟代表會1樓' THEN ag.name = '環保局'
+    WHEN a.location = '鹽水區老人文康活動中心1樓' THEN ag.name = '社會局'
+    WHEN a.location = '六甲區七甲龍湖活動中心2樓' THEN ag.name = '社會局'
+    WHEN a.location = '大內代表會3樓' THEN ag.name = '大內區公所'
+    WHEN a.location = '南瀛綠都心建物及地下層' THEN ag.name = '勞工局'
+    WHEN a.location = '北門公有零售市場2樓' THEN ag.name = '北門區公所'
+    WHEN a.location = '將軍區西和社區活動中心1樓' THEN ag.name = '奇美醫院'
+    WHEN a.location = '新市區社內里老人文康中心1、3樓' THEN ag.name = '奇美醫院'
+    WHEN a.location = '後壁代表會' THEN ag.name = '後壁區公所'
+    WHEN a.location = '白河老人文康活動中心2樓' THEN ag.name = '社會局'
+    WHEN a.location = '關廟果菜市場' THEN ag.name = '交通局'
+    WHEN a.location = '六甲營區（六甲段4-10、4-11、15地號）' THEN ag.name = '動物防疫保護處'
+    WHEN a.location = '善化區老人文康活動中心3樓' THEN ag.name = '社會局'
+    WHEN a.location = '警察局白河分局青山派出所' THEN ag.name = '東山區公所'
+END
+WHERE a.year = 104;
+
+-- 處理多對多關聯（原新營憲兵隊及地下室2間房間）
+INSERT INTO activated_asset_demand_agencies 
+(activated_asset_id, agency_id)
+SELECT 
+    a.id as activated_asset_id,
+    ag.id as agency_id
+FROM activated_assets a
+CROSS JOIN agencies ag
+WHERE a.year = 104 
+AND a.location = '原新營憲兵隊及地下室2間房間'
+AND ag.name IN ('警察局', '觀光旅遊局');
+
+
+INSERT INTO activated_asset_demand_agencies 
+(activated_asset_id, agency_id)
+SELECT 
+    a.id as activated_asset_id,
+    ag.id as agency_id
+FROM activated_assets a
+LEFT JOIN agencies ag ON CASE 
+    WHEN a.location = '麻豆區保安段992、994、995地號' THEN ag.name = '消防局'
+    WHEN a.location = '警察局中西區忠義路4間眷屬宿舍' THEN ag.name = '文化局'
+    WHEN a.location = '開元公有零售市場4樓' THEN ag.name = '文化局'
+    WHEN a.location = '善化第一公有零售市場2樓' THEN ag.name = '善化區公所'
+    WHEN a.location = '國防部陸軍隆田退舍' THEN ag.name = '環保局'
+    WHEN a.location = '七股區國民黨部' THEN ag.name = '佳里戶政事務所'
+    WHEN a.location = '麻豆市三公有零售市場4樓' THEN ag.name = '麻豆區公所'
+    WHEN a.location = '原將軍代表會1、2樓' THEN ag.name = '警察局'
+END
+WHERE a.year = 105;
+
+-- 106
+-- 建立一般的一對一關聯
+INSERT INTO activated_asset_demand_agencies 
+(activated_asset_id, agency_id)
+SELECT 
+    a.id as activated_asset_id,
+    ag.id as agency_id
+FROM activated_assets a
+LEFT JOIN agencies ag ON CASE 
+    WHEN a.location = '楠西區鹿田派出所' THEN ag.name = '社會局'
+    WHEN a.location = '仁德老人文康活動中心4樓' THEN ag.name = '社會局'
+    WHEN a.location = '安南區安西段2157、2158地號' THEN ag.name = '警察局'
+    WHEN a.location = '新營區忠政段931-1地號(稅務局宿舍)' THEN ag.name = '新營區公所'
+    WHEN a.location = '中西區康樂段541-1、543、543-2、547、548、548-15、548-16、564-2、564-3地號市有土地' THEN ag.name = '交通局'
+    WHEN a.location = '中西區萬昌段241地號市有土地' THEN ag.name = '交通局'
+    WHEN a.location = '中西區南寧段213-1、213-2、213-3、213-4地號市有土地' THEN ag.name = '交通局'
+    WHEN a.location = '東區泉南段702、703地號市有土地' THEN ag.name = '交通局'
+    WHEN a.location = '東區育樂段302、302-1、302-2地號國有土地' THEN ag.name = '交通局'
+    WHEN a.location = '中西區玉宇段79-1地號市有土地' THEN ag.name = '中西區公所'
+    WHEN a.location = '中西區南寧段210地號市有土地' THEN ag.name = '交通局'
+    WHEN a.location = '中西區康樂段236、254、336、336-19、336-20地號市有土地' THEN ag.name = '中西區公所'
+    WHEN a.location = '中西區環河段29-2、29-3、29-4、31-1、32-2、33、33-4地號市有土地' THEN ag.name = '交通局'
+    WHEN a.location = '東區竹篙厝段2111、2111-1、2111-27、2111-39地號市有土地' THEN ag.name = '交通局'
+    WHEN a.location = '東區路東段852、853-3、853-4地號市有土地' THEN ag.name = '交通局'
+    WHEN a.location = '東區泉南段495、496、497、685、700地號市有土地' THEN ag.name = '東區區公所'
+    WHEN a.location = '南區公英段1150地號市有土地' THEN ag.name = '南區區公所'
+    WHEN a.location = '南區鹽埕段234-32、234-33地號市有土地' THEN ag.name = '南區區公所'
+    WHEN a.location = '南區新都段71-33、71-34地號市有土地' THEN ag.name = '南區區公所'
+    WHEN a.location = '西港區港南段338、339地號市有土地' THEN ag.name = '西港區公所'
+    WHEN a.location = '官田區隆田段229、231、244、248地號市有土地' THEN ag.name = '官田區公所'
+    WHEN a.location = '鹽水區新岸段703地號市有土地' THEN ag.name = '鹽水區公所'
+    WHEN a.location = '原佳里戶政七股辦公處' THEN ag.name = '社會局'
+END
+WHERE a.year = 106;
+
+
+-- 處理多對多關聯（柳營科技工業區暨環保園區管理研究大樓2樓商務辦公室）
+INSERT INTO activated_asset_demand_agencies 
+(activated_asset_id, agency_id)
+SELECT 
+    a.id as activated_asset_id,
+    ag.id as agency_id
+FROM activated_assets a
+CROSS JOIN agencies ag
+WHERE a.year = 106 
+AND a.location = '柳營科技工業區暨環保園區管理研究大樓2樓商務辦公室'
+AND ag.name IN ('觀光旅遊局', '勞工局');
+
+
+INSERT INTO agencies (name, note) VALUES
+('內政部移民署', '內政部')
+ON CONFLICT (name) DO NOTHING;
+
+-- 107
+-- 建立一般的一對一關聯
+INSERT INTO activated_asset_demand_agencies 
+(activated_asset_id, agency_id)
+SELECT 
+    a.id as activated_asset_id,
+    ag.id as agency_id
+FROM activated_assets a
+LEFT JOIN agencies ag ON CASE 
+    WHEN a.location = '中西區龍盛社區活動中心2樓' THEN ag.name = '社會局'
+    WHEN a.location = '警察局麻豆分局賀建派出所' THEN ag.name = '賀建國小'
+    WHEN a.location = '原關廟代表會1樓' THEN ag.name = '社會局'
+    WHEN a.location = '佳里區佳安東路2號、6號(佳里多摩市)' THEN ag.name = '社會局'
+    WHEN a.location = '永新社區活動中心2樓' THEN ag.name = '文化資產管理處'
+    WHEN a.location = '佳里區佳安東路12號(佳里多摩市)' THEN ag.name = '財政稅務局'
+    WHEN a.location = '南瀛綠都心甲梯辦公室' THEN ag.name = '新營區公所'
+    WHEN a.location = '警察局白河分局河東派出所宿舍' THEN ag.name = '環境保護局'
+    WHEN a.location = '南區文華市場2樓' THEN ag.name = '經濟發展局'
+    WHEN a.location = '原官田代表會2樓' THEN ag.name = '社會局'
+    -- ... (省略中間相似的對應關係)
+    WHEN a.location = '南區鹽埕段3109-118地號市有土地' THEN ag.name = '南區區公所'
+    WHEN a.location = '東區竹篙厝段1565地號市有土地' THEN ag.name = '東區區公所'
+    WHEN a.location = '鹽水區仁愛段281及857-1地號市有土地' THEN ag.name = '鹽水區公所'
+    WHEN a.location = '鹽水區仁愛段266及269地號市有土地' THEN ag.name = '鹽水區公所'
+    WHEN a.location = '新市區三里聯合活動中心2樓' THEN ag.name = '社會局'
+    WHEN a.location = '佳里區民生街17巷21號宿舍' THEN ag.name = '財政稅務局'
+    WHEN a.location = '原警察局善化分局' THEN ag.name = '內政部移民署'
+    WHEN a.location = '中西區福安里活動中心' THEN ag.name = '內政部移民署'
+END
+WHERE a.year = 107;
+
+-- 處理多對多關聯（柳科工業區暨環保園區育成中心3樓實驗室廠房）
+INSERT INTO activated_asset_demand_agencies 
+(activated_asset_id, agency_id)
+SELECT 
+    a.id as activated_asset_id,
+    ag.id as agency_id
+FROM activated_assets a
+CROSS JOIN agencies ag
+WHERE a.year = 107 
+AND a.location = '柳科工業區暨環保園區育成中心3樓實驗室廠房(編號304及305)'
+AND ag.name IN ('工務局', '勞工局');
+
