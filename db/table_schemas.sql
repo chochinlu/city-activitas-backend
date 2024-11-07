@@ -401,3 +401,143 @@ COMMENT ON COLUMN activation_history.change_date IS '狀態變更日期';
 COMMENT ON COLUMN activation_history.reason IS '變更原因';
 COMMENT ON COLUMN activation_history.note IS '備註';
 COMMENT ON COLUMN activation_history.created_by IS '建立者ID';
+
+
+
+-- // 資產處理案件表
+-- Table asset_cases {
+--   id integer [pk, increment]      // 案件編號
+--   asset_id integer [ref: > assets.id]  // 關聯到主要資產表
+--   name text [not null]               // 案件名稱, 例如：臺南市玉井游泳池
+--   purpose text                       // 活化目標說明,例如：供社會局設置居家托育服務中心
+--   purpose_type_id integer [ref: > usage_types.id]  // 活化目標類型,例如：運動設施、停車場
+--   status varchar [not null]          // 案件狀態,例如：解除列管尚未完成活化、活化中
+--   created_at timestamp [default: `CURRENT_TIMESTAMP`]
+--   updated_at timestamp
+
+--   indexes {
+--     asset_id
+--     purpose_type_id
+--     status
+--   }
+-- }
+
+-- // 資產處理案件表
+CREATE TABLE asset_cases (
+    id SERIAL PRIMARY KEY,
+    asset_id INTEGER REFERENCES assets(id),
+    name TEXT NOT NULL,
+    purpose TEXT,
+    purpose_type_id INTEGER REFERENCES usage_types(id),
+    status VARCHAR NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP
+);
+
+-- 建立索引
+CREATE INDEX idx_asset_cases_asset_id ON asset_cases(asset_id);
+CREATE INDEX idx_asset_cases_purpose_type_id ON asset_cases(purpose_type_id);
+CREATE INDEX idx_asset_cases_status ON asset_cases(status);
+
+-- 添加欄位註釋
+COMMENT ON TABLE asset_cases IS '資產處理案件表';
+COMMENT ON COLUMN asset_cases.asset_id IS '關聯到主要資產表';
+COMMENT ON COLUMN asset_cases.name IS '案件名稱，例如：臺南市玉井游泳池';
+COMMENT ON COLUMN asset_cases.purpose IS '活化目標說明，例如：供社會局設置居家托育服務中心';
+COMMENT ON COLUMN asset_cases.purpose_type_id IS '活化目標類型，例如：運動設施、停車場';
+COMMENT ON COLUMN asset_cases.status IS '案件狀態，例如：解除列管尚未完成活化、活化中';
+
+
+
+-- // 案件會議結論表
+-- Table case_meeting_conclusions {
+--   id integer [pk, increment]
+--   case_id integer [ref: > asset_cases.id] // 案件編號
+--   meeting_date date [not null]       // 會議日期
+--   content text [not null]            // 結論內容
+--   created_at timestamp [default: `CURRENT_TIMESTAMP`]
+--   updated_at timestamp
+
+--   indexes {
+--     case_id
+--     meeting_date
+--   }
+-- }
+
+-- // 案件會議結論表
+CREATE TABLE case_meeting_conclusions (
+    id SERIAL PRIMARY KEY,
+    case_id INTEGER REFERENCES asset_cases(id),
+    meeting_date DATE NOT NULL,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP
+);
+
+-- 建立索引
+CREATE INDEX idx_case_meeting_conclusions_case_id ON case_meeting_conclusions(case_id);
+CREATE INDEX idx_case_meeting_conclusions_meeting_date ON case_meeting_conclusions(meeting_date);
+
+-- 添加欄位註釋
+COMMENT ON TABLE case_meeting_conclusions IS '案件會議結論表';
+COMMENT ON COLUMN case_meeting_conclusions.case_id IS '案件編號';
+COMMENT ON COLUMN case_meeting_conclusions.meeting_date IS '會議日期';
+COMMENT ON COLUMN case_meeting_conclusions.content IS '結論內容';
+
+
+
+-- // 案件任務表
+-- Table case_tasks {
+--   id integer [pk, increment]         // 任務序號
+--   case_id integer [ref: > asset_cases.id]  // 案件編號
+--   agency_id integer [ref: > agencies.id]  // 負責單位(執行機關)
+--   task_content text [not null]       // 任務內容
+--   status varchar [not null]          // 進度狀態, 例如：待處理、進行中、已完成
+--   start_date date                    // 開始執行時間
+--   complete_date date                 // 實際完成時間
+--   due_date date                      // 預期完成時間
+--   note text                         // 備註
+--   created_at timestamp [default: `CURRENT_TIMESTAMP`]
+--   updated_at timestamp
+
+--   indexes {
+--     case_id
+--     agency_id
+--     status
+--   }
+-- }
+
+-- // 案件任務表
+CREATE TABLE case_tasks (
+    id SERIAL PRIMARY KEY,
+    case_id INTEGER REFERENCES asset_cases(id),
+    agency_id INTEGER REFERENCES agencies(id),
+    task_content TEXT NOT NULL,
+    status VARCHAR NOT NULL,
+    start_date DATE,
+    complete_date DATE,
+    due_date DATE,
+    note TEXT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP
+);
+
+-- 建立索引
+CREATE INDEX idx_case_tasks_case_id ON case_tasks(case_id);
+CREATE INDEX idx_case_tasks_agency_id ON case_tasks(agency_id);
+CREATE INDEX idx_case_tasks_status ON case_tasks(status);
+
+-- 添加欄位註釋
+COMMENT ON TABLE case_tasks IS '案件任務表';
+COMMENT ON COLUMN case_tasks.id IS '任務序號';
+COMMENT ON COLUMN case_tasks.case_id IS '案件編號';
+COMMENT ON COLUMN case_tasks.agency_id IS '負責單位(執行機關)';
+COMMENT ON COLUMN case_tasks.task_content IS '任務內容';
+COMMENT ON COLUMN case_tasks.status IS '進度狀態, 例如：待處理、進行中、已完成';
+COMMENT ON COLUMN case_tasks.start_date IS '開始執行時間';
+COMMENT ON COLUMN case_tasks.complete_date IS '實際完成時間';
+COMMENT ON COLUMN case_tasks.due_date IS '預期完成時間';
+COMMENT ON COLUMN case_tasks.note IS '備註';
+
+
+
