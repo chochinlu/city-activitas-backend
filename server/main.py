@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, APIRouter
 from dotenv import load_dotenv
 from supabase import create_client, Client
 import os
@@ -12,10 +12,84 @@ supabase: Client = create_client(
 
 app = FastAPI()
 
+# routers
+idle_assets_router = APIRouter(prefix="/api/v1/idle", tags=["閒置資產"])
+active_cases_router = APIRouter(prefix="/api/v1/cases", tags=["進行中案件"])
+activated_assets_router = APIRouter(prefix="/api/v1/activated", tags=["已活化資產"])
+
+# 閒置資產相關路由
+@idle_assets_router.get("")  # /api/v1/idle
+async def get_idle_assets():
+    response = supabase.table('test_idle_assets_view').select("*").execute()
+    return response.data
+
+@idle_assets_router.get("/lands")  # /api/v1/idle/lands
+async def get_idle_land_assets():
+    response = supabase.table('test_idle_land_assets_view').select("*").execute()
+    return response.data
+
+@idle_assets_router.get("/buildings")  # /api/v1/idle/buildings
+async def get_idle_building_assets():
+    response = supabase.table('test_idle_building_assets').select("*").execute()
+    return response.data
+
+# 進行中案件相關路由
+@active_cases_router.get("")  # /api/v1/cases
+async def get_cases():
+    response = supabase.table('test_asset_cases_view').select("*").execute()
+    return response.data
+
+@active_cases_router.get("/{case_id}/tasks")  # /api/v1/cases/{case_id}/tasks
+async def get_case_tasks(case_id: int):
+    response = supabase.table('test_case_tasks_view').select("*").eq("案件ID", case_id).execute()
+    return response.data
+
+@active_cases_router.get("/{case_id}/meetings")  # /api/v1/cases/{case_id}/meetings
+async def get_case_meetings(case_id: int):
+    response = supabase.table('test_case_meeting_conclusions') \
+        .select("*") \
+        .eq("case_id", case_id) \
+        .order('meeting_date', desc=True) \
+        .execute()
+    return response.data
+
+@active_cases_router.get("/{case_id}/meetings/{meeting_id}")  # /api/v1/cases/{case_id}/meetings/{meeting_id}
+async def get_case_meeting(case_id: int, meeting_id: int):
+    response = supabase.table('test_case_meeting_conclusions') \
+        .select("*") \
+        .eq("case_id", case_id) \
+        .eq("id", meeting_id) \
+        .single() \
+        .execute()
+    return response.data
+
+@active_cases_router.post("/{case_id}/meetings")  # /api/v1/cases/{case_id}/meetings
+async def create_case_meeting(case_id: int, meeting_date: str, content: str):
+    response = supabase.table('test_case_meeting_conclusions') \
+        .insert({
+            "case_id": case_id,
+            "meeting_date": meeting_date,
+            "content": content
+        }).execute()
+    return response.data
+
+# 已活化資產相關路由
+@activated_assets_router.get("")  # /api/v1/activated
+async def get_activated_assets():
+    response = supabase.table('test_activated_assets_view').select("*").execute()
+    return response.data
+
+# include routers
+app.include_router(idle_assets_router)
+app.include_router(active_cases_router)
+app.include_router(activated_assets_router)
+
+# root
 @app.get("/")
 def read_root():
     return {"message": "Hello CityActivitas!"}
 
+# signup
 @app.post("/signup")
 async def signup(email: str, password: str):
     try:
@@ -68,80 +142,3 @@ async def login(email: str, password: str):
             status_code=400,
             detail=f"Login failed: {str(e)}"
         )
-
-# Assets 相關端點
-@app.get("/api/v1/assets")  # 取得所有資產
-async def get_assets():
-    response = supabase.table('test_assets').select("*").execute()
-    return response.data
-
-@app.get("/api/v1/assets/{asset_id}")  # 取得特定資產
-async def get_asset(asset_id: int):
-    response = supabase.table('test_assets').select("*").eq("id", asset_id).execute()
-    return response.data
-
-@app.get("/api/v1/assets/idle")  # 取得所有閒置資產
-async def get_idle_assets():
-    response = supabase.table('test_idle_assets_view').select("*").execute()
-    return response.data
-
-@app.get("/api/v1/assets/idle/lands")  # 取得閒置土地資產
-async def get_idle_land_assets():
-    response = supabase.table('test_idle_land_assets_view').select("*").execute()
-    return response.data
-
-@app.get("/api/v1/assets/idle/buildings")  # 取得閒置建物資產
-async def get_idle_building_assets():
-    response = supabase.table('test_idle_building_assets').select("*").execute()
-    return response.data
-
-@app.get("/api/v1/assets/activated")  # 取得已活化資產
-async def get_activated_assets():
-    response = supabase.table('test_activated_assets_view').select("*").execute()
-    return response.data
-
-# Cases 相關端點
-@app.get("/api/v1/cases")  # 取得所有案件
-async def get_cases():
-    response = supabase.table('test_asset_cases_view').select("*").execute()
-    return response.data
-
-@app.get("/api/v1/cases/{case_id}/tasks")  # 取得特定案件的任務
-async def get_case_tasks(case_id: int):
-    response = supabase.table('test_case_tasks_view').select("*").eq("案件ID", case_id).execute()
-    return response.data
-
-# 會議記錄相關端點
-@app.get("/api/v1/cases/{case_id}/meetings")  # 取得特定案件的所有會議記錄
-async def get_case_meetings(case_id: int):
-    response = supabase.table('test_case_meeting_conclusions') \
-        .select("*") \
-        .eq("case_id", case_id) \
-        .order('meeting_date', desc=True) \
-        .execute()
-    return response.data
-
-@app.get("/api/v1/cases/{case_id}/meetings/{meeting_id}")  # 取得特定會議記錄
-async def get_case_meeting(case_id: int, meeting_id: int):
-    response = supabase.table('test_case_meeting_conclusions') \
-        .select("*") \
-        .eq("case_id", case_id) \
-        .eq("id", meeting_id) \
-        .single() \
-        .execute()
-    return response.data
-
-
-@app.post("/api/v1/cases/{case_id}/meetings")  # 新增會議記錄
-async def create_case_meeting(
-    case_id: int,   # 案件ID
-    meeting_date: str,  # 會議日期 像是 2024-01-01
-    content: str  # 會議內容
-):
-    response = supabase.table('test_case_meeting_conclusions') \
-        .insert({
-            "case_id": case_id,
-            "meeting_date": meeting_date,
-            "content": content
-        }).execute()
-    return response.data
