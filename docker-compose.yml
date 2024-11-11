@@ -7,15 +7,9 @@ services:
       watch:
         - action: sync
           path: .
-          target: /app
+          target: /server
         - action: rebuild
           path: requirements.txt
-    environment:
-      - DATABASE_URL=sqlite:///data/sql_app.db
     volumes:
-      - .:/app
-      - sqlite_data:/app/data
+      - .:/server
     restart: unless-stopped
-
-volumes:
-  sqlite_data:

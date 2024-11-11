@@ -12,11 +12,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # create data directory
 RUN mkdir -p /app/data
 
-COPY . /app
+COPY server /app/server
 
 ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
 
 EXPOSE 8000
 
-CMD ["fastapi", "run", "app/main.py", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["fastapi", "run", "server/main.py", "--host", "0.0.0.0", "--port", "8000"]
