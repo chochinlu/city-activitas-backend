@@ -110,5 +110,38 @@ async def get_cases():
 async def get_case_tasks(case_id: int):
     response = supabase.table('test_case_tasks_view').select("*").eq("案件ID", case_id).execute()
     return response.data
-    
-  
+
+# 會議記錄相關端點
+@app.get("/api/v1/cases/{case_id}/meetings")  # 取得特定案件的所有會議記錄
+async def get_case_meetings(case_id: int):
+    response = supabase.table('test_case_meeting_conclusions') \
+        .select("*") \
+        .eq("case_id", case_id) \
+        .order('meeting_date', desc=True) \
+        .execute()
+    return response.data
+
+@app.get("/api/v1/cases/{case_id}/meetings/{meeting_id}")  # 取得特定會議記錄
+async def get_case_meeting(case_id: int, meeting_id: int):
+    response = supabase.table('test_case_meeting_conclusions') \
+        .select("*") \
+        .eq("case_id", case_id) \
+        .eq("id", meeting_id) \
+        .single() \
+        .execute()
+    return response.data
+
+
+@app.post("/api/v1/cases/{case_id}/meetings")  # 新增會議記錄
+async def create_case_meeting(
+    case_id: int,   # 案件ID
+    meeting_date: str,  # 會議日期 像是 2024-01-01
+    content: str  # 會議內容
+):
+    response = supabase.table('test_case_meeting_conclusions') \
+        .insert({
+            "case_id": case_id,
+            "meeting_date": meeting_date,
+            "content": content
+        }).execute()
+    return response.data
