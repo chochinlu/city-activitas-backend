@@ -1,7 +1,6 @@
 from fastapi import APIRouter
 from supabase import Client
 
-# 建立路由器
 router = APIRouter(prefix="/api/v1/cases", tags=["進行中案件"])
 
 def init_router(supabase: Client) -> APIRouter:

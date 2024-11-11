@@ -1,7 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from supabase import Client
 
-# 建立路由器
 router = APIRouter(tags=["認證"])
 
 def init_router(supabase: Client) -> APIRouter:

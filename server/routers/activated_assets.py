@@ -1,7 +1,6 @@
 from fastapi import APIRouter
 from supabase import Client
 
-# 建立路由器
 router = APIRouter(prefix="/api/v1/activated", tags=["已活化資產"])
 
 def init_router(supabase: Client) -> APIRouter:

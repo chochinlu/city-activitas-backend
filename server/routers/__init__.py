@@ -1,1 +1,1 @@
-# 空檔案，用於將資料夾標記為 Python 套件 
+# Empty file to mark directory as Python package
