@@ -51,11 +51,37 @@ def init_router(supabase: Client) -> APIRouter:
     async def get_idle_land_assets():
         response = supabase.table('test_idle_land_assets_view').select("*").execute()
         return response.data
+      
+    @router.get("/lands/{asset_id}")  # /api/v1/idle/lands/{asset_id}
+    async def get_idle_land_asset_by_id(asset_id: int):
+        try:
+            response = supabase.table('test_idle_land_assets_view').select("*").eq('資產ID', asset_id).execute()
+            
+            if not response.data:
+                raise HTTPException(status_code=404, detail="找不到指定的閒置土地資產")
+                
+            return response.data[0]
+            
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
 
     @router.get("/buildings")  # /api/v1/idle/buildings
     async def get_idle_building_assets():
         response = supabase.table('test_idle_building_assets').select("*").execute()
         return response.data
+
+    @router.get("/buildings/{asset_id}")  # /api/v1/idle/buildings/{asset_id}
+    async def get_idle_building_asset_by_id(asset_id: int):
+        try:
+            response = supabase.table('test_idle_building_assets').select("*").eq('id', asset_id).execute()
+            
+            if not response.data:
+                raise HTTPException(status_code=404, detail="找不到指定的閒置建物資產")
+                
+            return response.data[0]
+            
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
 
     @router.post("/assets", status_code=201)
     async def create_idle_asset(asset: AssetCreate):
@@ -90,7 +116,7 @@ def init_router(supabase: Client) -> APIRouter:
                 "updated_at": current_time
             }
             
-            asset_response = supabase.table('assets').insert(asset_data).execute()
+            asset_response = supabase.table('test_assets').insert(asset_data).execute()
             asset_id = asset_response.data[0]['id']
             
             # 2. 根據資產類型新增詳細資料
@@ -100,7 +126,7 @@ def init_router(supabase: Client) -> APIRouter:
                     land_data["asset_id"] = asset_id
                     land_data["created_at"] = current_time
                     land_data["updated_at"] = current_time
-                    supabase.table('land_details').insert(land_data).execute()
+                    supabase.table('test_land_details').insert(land_data).execute()
                     
             elif asset.type == "建物" and asset.building_details:
                 for building_detail in asset.building_details:
@@ -108,7 +134,7 @@ def init_router(supabase: Client) -> APIRouter:
                     building_data["asset_id"] = asset_id
                     building_data["created_at"] = current_time
                     building_data["updated_at"] = current_time
-                    supabase.table('building_details').insert(building_data).execute()
+                    supabase.table('test_building_details').insert(building_data).execute()
             
             return {"message": "閒置資產新增成功", "asset_id": asset_id}
             
