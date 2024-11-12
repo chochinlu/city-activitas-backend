@@ -182,3 +182,26 @@
     ]
 }
 ```
+
+### 新增案件
+
+```json
+// 不帶資產的案件
+POST /api/v1/cases
+{
+    "name": "測試 - 臺南市山上游泳池活化案",
+    "purpose": "測試 - 供社會局設置居家托育服務中心",
+    "purpose_type_id": 12,
+    "status": "規劃中"
+}
+
+// 帶資產的案件（會同時更新資產狀態）
+POST /api/v1/cases
+{
+    "asset_id": 46,
+    "name": "臺南市實踐派出所活化案",
+    "purpose": "測試 - 變停車場",
+    "purpose_type_id": 5,
+    "status": "規劃中"
+}
+```

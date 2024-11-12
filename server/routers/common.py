@@ -164,4 +164,20 @@ def init_router(supabase: Client) -> APIRouter:
             {"id": "建物", "name": "建物"}
         ]
 
+    @router.get("/case-statuses")
+    async def get_case_statuses():
+        return [
+            {"id": "核准經費中", "name": "核准經費中"},
+            {"id": "進行中", "name": "進行中"},
+            {"id": "完成招商", "name": "完成招商"},
+            {"id": "工程中", "name": "工程中"},
+            {"id": "工程期安排中", "name": "工程期安排中"},
+            {"id": "尚未規劃", "name": "尚未規劃"},
+            {"id": "還沒找到地", "name": "還沒找到地"},
+            {"id": "評估中", "name": "評估中"},
+            {"id": "評估場域", "name": "評估場域"},
+            {"id": "評估招商", "name": "評估招商"},
+            {"id": "已簽准", "name": "已簽准"}
+        ]
+
     return router 
