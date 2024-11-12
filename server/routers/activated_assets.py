@@ -87,33 +87,31 @@ def init_router(supabase: Client) -> APIRouter:
             # 更新時間戳記
             update_data["updated_at"] = datetime.now().isoformat()
             
-            # 如果有更新 asset_id 和 status，需要同步更新主要資產的狀態
-            if 'asset_id' in update_data and 'status' in update_data:
-                asset_status = None
-                if update_data['status'] == '進行中':
-                    asset_status = '已活化'
-                elif update_data['status'] == '已終止':
-                    asset_status = '未活化'
+            # 如果有更新 status，需要記錄歷史
+            if 'status' in update_data:
+                # 只有當狀態真的改變時才記錄
+                if update_data['status'] != existing_asset.data['status']:
+                    history_status = "啟動" if update_data['status'] == "進行中" else "終止"
+                    history_data = {
+                        "activated_asset_id": activated_id,
+                        "asset_id": existing_asset.data.get('asset_id'),
+                        "status": history_status,
+                        "change_date": datetime.now().date().isoformat(),
+                        "created_at": datetime.now().isoformat()
+                    }
                     
-                if asset_status:
-                    # 更新主要資產狀態
-                    supabase.table('test_assets') \
-                        .update({'status': asset_status, 'updated_at': datetime.now().isoformat()}) \
-                        .eq('id', update_data['asset_id']) \
+                    # 新增歷史紀錄
+                    supabase.table('test_activation_history') \
+                        .insert(history_data) \
                         .execute()
-            # 如果只有更新 status，但已有 asset_id
-            elif 'status' in update_data and existing_asset.data['asset_id']:
-                asset_status = None
-                if update_data['status'] == '進行中':
-                    asset_status = '已活化'
-                elif update_data['status'] == '已終止':
-                    asset_status = '未活化'
-                    
-                if asset_status:
-                    # 更新主要資產狀態
+                
+                # 如果有 asset_id（無論是新增還是既有的），都要更新資產狀態
+                asset_id = update_data.get('asset_id') or existing_asset.data.get('asset_id')
+                if asset_id:
+                    asset_status = '已活化' if update_data['status'] == '進行中' else '未活化'
                     supabase.table('test_assets') \
                         .update({'status': asset_status, 'updated_at': datetime.now().isoformat()}) \
-                        .eq('id', existing_asset.data['asset_id']) \
+                        .eq('id', asset_id) \
                         .execute()
             
             # 更新已活化資產
