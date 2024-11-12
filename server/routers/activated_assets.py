@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from supabase import Client
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, date
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/api/v1/activated", tags=["已活化資產"])
