@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from supabase import Client
-from datetime import datetime
+from datetime import datetime, date
 from typing import Optional
 from pydantic import BaseModel
 
@@ -13,6 +13,15 @@ class CaseCreate(BaseModel):
     purpose: Optional[str] = None           # 活化目標說明
     purpose_type_id: Optional[int] = None   # 活化目標類型 ID
     status: str                             # 案件狀態
+
+class TaskCreate(BaseModel):
+    agency_id: int                      # 負責單位(執行機關)
+    task_content: str                   # 任務內容
+    status: str                         # 進度狀態
+    start_date: Optional[date] = None   # 開始執行時間
+    complete_date: Optional[date] = None # 實際完成時間
+    due_date: Optional[date] = None     # 預期完成時間
+    note: Optional[str] = None          # 備註
 
 def init_router(supabase: Client) -> APIRouter:
 
@@ -95,6 +104,35 @@ def init_router(supabase: Client) -> APIRouter:
             }).execute()
         return response.data
 
+    @router.post("/{case_id}/tasks")  # /api/v1/cases/{case_id}/tasks
+    async def create_case_task(case_id: int, task: TaskCreate):
+        try:
+            # 檢查案件是否存在
+            case = supabase.table('test_asset_cases').select("id").eq('id', case_id).single().execute()
+            if not case.data:
+                raise HTTPException(status_code=404, detail="找不到指定的案件")
+                
+            # 檢查機關是否存在
+            agency = supabase.table('test_agencies').select("id").eq('id', task.agency_id).single().execute()
+            if not agency.data:
+                raise HTTPException(status_code=404, detail="找不到指定的機關")
+            
+            # 準備任務資料
+            current_time = datetime.now().isoformat()
+            task_data = task.dict()
+            task_data["case_id"] = case_id
+            task_data["created_at"] = current_time
+            task_data["updated_at"] = current_time
+            
+            # 新增任務
+            response = supabase.table('test_case_tasks').insert(task_data).execute()
+            
+            return response.data[0]
+            
+        except Exception as e:
+            if isinstance(e, HTTPException):
+                raise e
+            raise HTTPException(status_code=400, detail=str(e))
 
     @router.post("")  # /api/v1/cases
     async def create_case(case: CaseCreate):
