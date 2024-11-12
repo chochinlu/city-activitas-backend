@@ -360,6 +360,34 @@ def init_router(supabase: Client) -> APIRouter:
                 raise e
             raise HTTPException(status_code=400, detail=str(e))
 
+    @router.delete("/{case_id}/meetings/{meeting_id}")  # /api/v1/cases/{case_id}/meetings/{meeting_id}
+    async def delete_case_meeting(case_id: int, meeting_id: int):
+        try:
+            # 檢查會議結論是否存在且屬於指定的案件
+            existing_meeting = supabase.table('test_case_meeting_conclusions') \
+                .select("*") \
+                .eq('id', meeting_id) \
+                .eq('case_id', case_id) \
+                .single() \
+                .execute()
+                
+            if not existing_meeting.data:
+                raise HTTPException(status_code=404, detail="找不到指定的會議結論")
+            
+            # 刪除會議結論
+            response = supabase.table('test_case_meeting_conclusions') \
+                .delete() \
+                .eq('id', meeting_id) \
+                .eq('case_id', case_id) \
+                .execute()
+            
+            return {"message": "會議結論已成功刪除"}
+            
+        except Exception as e:
+            if isinstance(e, HTTPException):
+                raise e
+            raise HTTPException(status_code=400, detail=str(e))
+
     return router 
 
 
