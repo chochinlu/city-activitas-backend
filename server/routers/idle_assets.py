@@ -60,6 +60,18 @@ def init_router(supabase: Client) -> APIRouter:
         response = supabase.table('test_idle_assets_view').select("*").execute()
         return response.data
 
+    @router.get("/assets/{asset_id}")  # /api/v1/idle/assets/{asset_id}
+    async def get_idle_asset_by_id(asset_id: int):
+        try:
+            response = supabase.table('test_idle_assets_view').select("*").eq('id', asset_id).execute()
+        
+            if not response.data:
+                raise HTTPException(status_code=404, detail="找不到指定的閒置資產")
+                
+            return response.data[0]
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
     @router.get("/lands")  # /api/v1/idle/lands
     async def get_idle_land_assets():
         response = supabase.table('test_idle_land_assets_view').select("*").execute()
