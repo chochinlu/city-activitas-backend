@@ -157,4 +157,28 @@
 }
 ```
 
+更新建物資產:  **更新一定要有type標記是土地還是建物**
 
+```json
+// PATCH /api/v1/idle/assets/{asset_id}
+
+{
+    "type": "建物",
+    "address": "北區大武街163號",  // 更新地址
+    "building_details": [
+        {
+            "building_number": "實踐段832建號",
+            "current_status": "空置",  // 更新現況
+            "vacancy_rate": 100,      // 更新空置比例
+            "note": "更新測試 - 所有空間皆已空置"  // 更新備註
+        }
+    ],
+    "building_land_details": [
+        {
+            "lot_number": "1043-44",
+            "land_type": "市有土地",
+            "land_manager": "臺南市政府"  // 更新土地管理者
+        }
+    ]
+}
+```

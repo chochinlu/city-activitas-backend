@@ -30,10 +30,7 @@ class BuildingDetailCreate(BaseModel):
 class BuildingLandDetailCreate(BaseModel):
     lot_number: str                         # 地號，例如：80-8、81-1
     land_type: Optional[str] = None         # 土地種類，例如：市有土地、國有土地
-    area: Optional[float] = None            # 面積(平方公尺)
-    zone_type: Optional[str] = None         # 使用分區
-    land_use: Optional[str] = None          # 土地用途
-    note: Optional[str] = None              # 備註
+    land_manager: Optional[str] = None     # 土地管理者，例如：臺南市政府
 
 class AssetCreate(BaseModel):
     type: str                               # 資產種類：土地或建物
@@ -195,7 +192,7 @@ def init_router(supabase: Client) -> APIRouter:
             # 1. 更新主要資產資料
             update_data = {}
             for field, value in asset.dict(exclude_unset=True).items():
-                if field not in ['land_details', 'building_details']:
+                if field not in ['land_details', 'building_details', 'building_land_details']:
                     if field == 'coordinates' and value:
                         update_data[field] = f"({value[0]},{value[1]})"
                     elif field == 'area_coordinates' and value:
@@ -211,8 +208,8 @@ def init_router(supabase: Client) -> APIRouter:
             if update_data:
                 supabase.table('test_assets').update(update_data).eq('id', asset_id).execute()
             
-            # 2. 更新子表資料
-            if asset.type == "土地" and asset.land_details:
+            # 2. 更新土地明細
+            if asset.land_details:
                 # 獲取現有的土地明細
                 existing_lands = supabase.table('test_land_details').select("*").eq('asset_id', asset_id).execute()
                 existing_lands_dict = {land['lot_number']: land for land in existing_lands.data}
@@ -238,33 +235,50 @@ def init_router(supabase: Client) -> APIRouter:
                 if existing_lands_dict:
                     old_ids = [land['id'] for land in existing_lands_dict.values()]
                     supabase.table('test_land_details').delete().in_('id', old_ids).execute()
-                
-            elif asset.type == "建物" and asset.building_details:
-                # 獲取現有的建物明細
+            
+            # 3. 更新建物明細
+            if asset.building_details:
                 existing_buildings = supabase.table('test_building_details').select("*").eq('asset_id', asset_id).execute()
                 existing_buildings_dict = {building['building_number']: building for building in existing_buildings.data}
                 
-                # 處理每個建物明細
                 for building_detail in asset.building_details:
                     building_data = building_detail.dict()
                     building_data["updated_at"] = current_time
                     
                     if building_detail.building_number in existing_buildings_dict:
-                        # 更新現有記錄
                         building_id = existing_buildings_dict[building_detail.building_number]['id']
                         supabase.table('test_building_details').update(building_data).eq('id', building_id).execute()
-                        # 從字典中移除已處理的記錄
                         del existing_buildings_dict[building_detail.building_number]
                     else:
-                        # 新增新記錄
                         building_data["asset_id"] = asset_id
                         building_data["created_at"] = current_time
                         supabase.table('test_building_details').insert(building_data).execute()
                 
-                # 刪除不再需要的記錄
                 if existing_buildings_dict:
                     old_ids = [building['id'] for building in existing_buildings_dict.values()]
                     supabase.table('test_building_details').delete().in_('id', old_ids).execute()
+            
+            # 4. 更新建物土地明細
+            if asset.building_land_details:
+                existing_lands = supabase.table('test_building_land_details').select("*").eq('asset_id', asset_id).execute()
+                existing_lands_dict = {land['lot_number']: land for land in existing_lands.data}
+                
+                for land_detail in asset.building_land_details:
+                    land_data = land_detail.dict()
+                    land_data["updated_at"] = current_time
+                    
+                    if land_detail.lot_number in existing_lands_dict:
+                        land_id = existing_lands_dict[land_detail.lot_number]['id']
+                        supabase.table('test_building_land_details').update(land_data).eq('id', land_id).execute()
+                        del existing_lands_dict[land_detail.lot_number]
+                    else:
+                        land_data["asset_id"] = asset_id
+                        land_data["created_at"] = current_time
+                        supabase.table('test_building_land_details').insert(land_data).execute()
+                
+                if existing_lands_dict:
+                    old_ids = [land['id'] for land in existing_lands_dict.values()]
+                    supabase.table('test_building_land_details').delete().in_('id', old_ids).execute()
             
             return {"message": "閒置資產更新成功", "asset_id": asset_id}
             
