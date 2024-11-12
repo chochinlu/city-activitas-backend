@@ -73,4 +73,11 @@ def init_router(supabase: Client) -> APIRouter:
                 raise e
             raise HTTPException(status_code=400, detail=str(e))
 
+    @router.get("/statuses")  # /api/v1/activated/statuses
+    async def get_activated_asset_statuses():
+        return [
+            {"id": "進行中", "name": "進行中"},
+            {"id": "已終止", "name": "已終止"}
+        ]
+
     return router 
