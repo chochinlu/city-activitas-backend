@@ -23,6 +23,12 @@ class TaskCreate(BaseModel):
     due_date: Optional[date] = None     # 預期完成時間
     note: Optional[str] = None          # 備註
 
+class CaseUpdate(BaseModel):
+    name: Optional[str] = None               # 案件名稱
+    purpose: Optional[str] = None            # 活化目標說明
+    purpose_type_id: Optional[int] = None    # 活化目標類型 ID
+    status: Optional[str] = None             # 案件狀態
+
 def init_router(supabase: Client) -> APIRouter:
 
     @router.get("")  # /api/v1/cases
@@ -167,6 +173,41 @@ def init_router(supabase: Client) -> APIRouter:
             return response.data[0]
             
         except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
+    @router.put("/{case_id}")  # /api/v1/cases/{case_id}
+    async def update_case(case_id: int, case: CaseUpdate):
+        try:
+            # 檢查案件是否存在
+            existing_case = supabase.table('test_asset_cases').select("*").eq('id', case_id).single().execute()
+            if not existing_case.data:
+                raise HTTPException(status_code=404, detail="找不到指定的案件")
+            
+            # 準備更新資料
+            update_data = {k: v for k, v in case.dict(exclude_unset=True).items() if v is not None}
+            if not update_data:
+                raise HTTPException(status_code=400, detail="沒有提供要更新的資料")
+            
+            # 如果有提供 purpose_type_id，檢查使用類型是否存在
+            if case.purpose_type_id:
+                usage_type = supabase.table('test_usage_types').select("id").eq('id', case.purpose_type_id).single().execute()
+                if not usage_type.data:
+                    raise HTTPException(status_code=404, detail="找不到指定的使用類型")
+            
+            # 更新時間戳記
+            update_data["updated_at"] = datetime.now().isoformat()
+            
+            # 更新案件
+            response = supabase.table('test_asset_cases') \
+                .update(update_data) \
+                .eq('id', case_id) \
+                .execute()
+                
+            return response.data[0]
+            
+        except Exception as e:
+            if isinstance(e, HTTPException):
+                raise e
             raise HTTPException(status_code=400, detail=str(e))
 
     return router 
