@@ -250,6 +250,34 @@ def init_router(supabase: Client) -> APIRouter:
         except Exception as e:
             raise HTTPException(status_code=400, detail=str(e))
 
+    @router.delete("/assets/{asset_id}")
+    async def delete_idle_asset(asset_id: int):
+        try:
+            # 1. 檢查資產是否存在
+            asset = supabase.table('test_assets').select("type").eq('id', asset_id).execute()
+            if not asset.data:
+                raise HTTPException(status_code=404, detail="找不到指定的閒置資產")
+                
+            # 2. 根據資產類型刪除相關的明細資料
+            if asset.data[0]['type'] == "土地":
+                # 刪除土地明細
+                supabase.table('test_land_details').delete().eq('asset_id', asset_id).execute()
+                
+            elif asset.data[0]['type'] == "建物":
+                # 刪除建物土地關聯
+                supabase.table('test_building_land_details').delete().eq('asset_id', asset_id).execute()
+                
+                # 刪除建物明細
+                supabase.table('test_building_details').delete().eq('asset_id', asset_id).execute()
+                
+            # 3. 刪除主要資產記錄
+            supabase.table('test_assets').delete().eq('id', asset_id).execute()
+            
+            return {"message": "閒置資產刪除成功", "asset_id": asset_id}
+            
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
     return router 
   
   
