@@ -21,6 +21,46 @@ def init_router(supabase: Client) -> APIRouter:
         response = supabase.table('test_asset_cases_view').select("*").execute()
         return response.data
 
+    @router.get("/{case_id}")  # /api/v1/cases/{case_id}
+    async def get_case(case_id: int):
+        try:
+            # 取得案件基本資料，包含關聯的資產和使用類型資訊
+            response = supabase.table('test_asset_cases_view') \
+                .select("*") \
+                .eq("案件ID", case_id) \
+                .single() \
+                .execute()
+                
+            if not response.data:
+                raise HTTPException(status_code=404, detail="找不到指定的案件")
+                
+            case_data = response.data
+            
+            # 取得案件相關的任務
+            tasks = supabase.table('test_case_tasks_view') \
+                .select("*") \
+                .eq("案件ID", case_id) \
+                .execute()
+                
+            # 取得案件相關的會議結論
+            meetings = supabase.table('test_case_meeting_conclusions') \
+                .select("*") \
+                .eq("case_id", case_id) \
+                .order('meeting_date', desc=True) \
+                .execute()
+                
+            # 組合所有資料
+            return {
+                "case": case_data,
+                "tasks": tasks.data,
+                "meetings": meetings.data
+            }
+            
+        except Exception as e:
+            if isinstance(e, HTTPException):
+                raise e
+            raise HTTPException(status_code=400, detail=str(e))
+            
     @router.get("/{case_id}/tasks")  # /api/v1/cases/{case_id}/tasks
     async def get_case_tasks(case_id: int):
         response = supabase.table('test_case_tasks_view').select("*").eq("案件ID", case_id).execute()
@@ -89,46 +129,6 @@ def init_router(supabase: Client) -> APIRouter:
             return response.data[0]
             
         except Exception as e:
-            raise HTTPException(status_code=400, detail=str(e))
-
-    @router.get("/{case_id}")  # /api/v1/cases/{case_id}
-    async def get_case(case_id: int):
-        try:
-            # 取得案件基本資料，包含關聯的資產和使用類型資訊
-            response = supabase.table('test_asset_cases_view') \
-                .select("*") \
-                .eq("案件ID", case_id) \
-                .single() \
-                .execute()
-                
-            if not response.data:
-                raise HTTPException(status_code=404, detail="找不到指定的案件")
-                
-            case_data = response.data
-            
-            # 取得案件相關的任務
-            tasks = supabase.table('test_case_tasks_view') \
-                .select("*") \
-                .eq("案件ID", case_id) \
-                .execute()
-                
-            # 取得案件相關的會議結論
-            meetings = supabase.table('test_case_meeting_conclusions') \
-                .select("*") \
-                .eq("case_id", case_id) \
-                .order('meeting_date', desc=True) \
-                .execute()
-                
-            # 組合所有資料
-            return {
-                "case": case_data,
-                "tasks": tasks.data,
-                "meetings": meetings.data
-            }
-            
-        except Exception as e:
-            if isinstance(e, HTTPException):
-                raise e
             raise HTTPException(status_code=400, detail=str(e))
 
     return router 
