@@ -292,6 +292,34 @@ def init_router(supabase: Client) -> APIRouter:
                 raise e
             raise HTTPException(status_code=400, detail=str(e))
 
+    @router.delete("/{case_id}/tasks/{task_id}")  # /api/v1/cases/{case_id}/tasks/{task_id}
+    async def delete_case_task(case_id: int, task_id: int):
+        try:
+            # 檢查任務是否存在且屬於指定的案件
+            existing_task = supabase.table('test_case_tasks') \
+                .select("*") \
+                .eq('id', task_id) \
+                .eq('case_id', case_id) \
+                .single() \
+                .execute()
+                
+            if not existing_task.data:
+                raise HTTPException(status_code=404, detail="找不到指定的任務")
+            
+            # 刪除任務
+            response = supabase.table('test_case_tasks') \
+                .delete() \
+                .eq('id', task_id) \
+                .eq('case_id', case_id) \
+                .execute()
+            
+            return {"message": "任務已成功刪除"}
+            
+        except Exception as e:
+            if isinstance(e, HTTPException):
+                raise e
+            raise HTTPException(status_code=400, detail=str(e))
+
     return router 
 
 
