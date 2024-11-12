@@ -29,6 +29,15 @@ class CaseUpdate(BaseModel):
     purpose_type_id: Optional[int] = None    # 活化目標類型 ID
     status: Optional[str] = None             # 案件狀態
 
+class TaskUpdate(BaseModel):
+    agency_id: Optional[int] = None          # 負責單位(執行機關)
+    task_content: Optional[str] = None       # 任務內容
+    status: Optional[str] = None             # 進度狀態
+    start_date: Optional[date] = None        # 開始執行時間
+    complete_date: Optional[date] = None     # 實際完成時間
+    due_date: Optional[date] = None          # 預期完成時間
+    note: Optional[str] = None               # 備註
+
 def init_router(supabase: Client) -> APIRouter:
 
     @router.get("")  # /api/v1/cases
@@ -235,6 +244,48 @@ def init_router(supabase: Client) -> APIRouter:
             response = supabase.table('test_asset_cases').delete().eq('id', case_id).execute()
             
             return {"message": "案件已成功刪除"}
+            
+        except Exception as e:
+            if isinstance(e, HTTPException):
+                raise e
+            raise HTTPException(status_code=400, detail=str(e))
+
+    @router.put("/{case_id}/tasks/{task_id}")  # /api/v1/cases/{case_id}/tasks/{task_id}
+    async def update_case_task(case_id: int, task_id: int, task: TaskUpdate):
+        try:
+            # 檢查任務是否存在且屬於指定的案件
+            existing_task = supabase.table('test_case_tasks') \
+                .select("*") \
+                .eq('id', task_id) \
+                .eq('case_id', case_id) \
+                .single() \
+                .execute()
+                
+            if not existing_task.data:
+                raise HTTPException(status_code=404, detail="找不到指定的任務")
+            
+            # 準備更新資料
+            update_data = {k: v for k, v in task.dict(exclude_unset=True).items() if v is not None}
+            if not update_data:
+                raise HTTPException(status_code=400, detail="沒有提供要更新的資料")
+            
+            # 如果有提供 agency_id，檢查機關是否存在
+            if task.agency_id:
+                agency = supabase.table('test_agencies').select("id").eq('id', task.agency_id).single().execute()
+                if not agency.data:
+                    raise HTTPException(status_code=404, detail="找不到指定的機關")
+            
+            # 更新時間戳記
+            update_data["updated_at"] = datetime.now().isoformat()
+            
+            # 更新任務
+            response = supabase.table('test_case_tasks') \
+                .update(update_data) \
+                .eq('id', task_id) \
+                .eq('case_id', case_id) \
+                .execute()
+                
+            return response.data[0]
             
         except Exception as e:
             if isinstance(e, HTTPException):
