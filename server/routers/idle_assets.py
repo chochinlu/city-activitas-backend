@@ -27,6 +27,14 @@ class BuildingDetailCreate(BaseModel):
     vacancy_rate: Optional[int] = None      # 空置比例，例如：100
     note: Optional[str] = None              # 備註，例如：2樓空置、3樓部分空間約400坪提供給使用
 
+class BuildingLandDetailCreate(BaseModel):
+    lot_number: str                         # 地號，例如：80-8、81-1
+    land_type: Optional[str] = None         # 土地種類，例如：市有土地、國有土地
+    area: Optional[float] = None            # 面積(平方公尺)
+    zone_type: Optional[str] = None         # 使用分區
+    land_use: Optional[str] = None          # 土地用途
+    note: Optional[str] = None              # 備註
+
 class AssetCreate(BaseModel):
     type: str                               # 資產種類：土地或建物
     agency_id: int                          # 管理機關ID
@@ -39,6 +47,7 @@ class AssetCreate(BaseModel):
     status: str = "未活化"                  # 狀態：已經活化、活化中、未活化
     land_details: Optional[list[LandDetailCreate]] = None      # 土地明細列表
     building_details: Optional[list[BuildingDetailCreate]] = None  # 建物明細列表
+    building_land_details: Optional[list[BuildingLandDetailCreate]] = None  # 建物土地明細列表
 
 class AssetUpdate(BaseModel):
     type: Optional[str] = None                # 資產種類：土地或建物
@@ -52,6 +61,7 @@ class AssetUpdate(BaseModel):
     status: Optional[str] = None              # 狀態
     land_details: Optional[list[LandDetailCreate]] = None      # 土地明細列表
     building_details: Optional[list[BuildingDetailCreate]] = None  # 建物明細列表
+    building_land_details: Optional[list[BuildingLandDetailCreate]] = None  # 建物土地明細列表
 
 def init_router(supabase: Client) -> APIRouter:
     
@@ -153,13 +163,24 @@ def init_router(supabase: Client) -> APIRouter:
                     land_data["updated_at"] = current_time
                     supabase.table('test_land_details').insert(land_data).execute()
                     
-            elif asset.type == "建物" and asset.building_details:
-                for building_detail in asset.building_details:
-                    building_data = building_detail.dict()
-                    building_data["asset_id"] = asset_id
-                    building_data["created_at"] = current_time
-                    building_data["updated_at"] = current_time
-                    supabase.table('test_building_details').insert(building_data).execute()
+            elif asset.type == "建物":
+                # 新增建物詳細資料
+                if asset.building_details:
+                    for building_detail in asset.building_details:
+                        building_data = building_detail.dict()
+                        building_data["asset_id"] = asset_id
+                        building_data["created_at"] = current_time
+                        building_data["updated_at"] = current_time
+                        supabase.table('test_building_details').insert(building_data).execute()
+                
+                # 新增建物土地詳細資料
+                if asset.building_land_details:
+                    for land_detail in asset.building_land_details:
+                        land_data = land_detail.dict()
+                        land_data["asset_id"] = asset_id
+                        land_data["created_at"] = current_time
+                        land_data["updated_at"] = current_time
+                        supabase.table('test_building_land_details').insert(land_data).execute()
             
             return {"message": "閒置資產新增成功", "asset_id": asset_id}
             
