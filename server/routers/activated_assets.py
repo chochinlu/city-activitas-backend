@@ -22,6 +22,23 @@ class ActivatedAssetUpdate(BaseModel):
     start_date: Optional[date] = None           # 活化開始日期
     end_date: Optional[date] = None             # 活化結束日期
 
+class ActivatedAssetCreate(BaseModel):
+    asset_id: Optional[int] = None
+    year: int                           # 年度
+    location: Optional[str] = None      # 地點說明
+    is_supplementary: bool = False      # 是否為補列
+    supplementary_year: Optional[int] = None  # 補列年度
+    usage_plan: Optional[str] = None    # 計畫用途
+    usage_type_id: Optional[int] = None # 計畫用途類別
+    land_value: Optional[float] = None  # 土地公告現值
+    building_value: Optional[float] = None  # 房屋課稅現值
+    benefit_value: Optional[float] = None  # 節流效益
+    is_counted: bool                    # 列入計算
+    note: Optional[str] = None          # 備註
+    status: str                         # 狀態
+    start_date: date                    # 活化開始日期
+    end_date: Optional[date] = None     # 活化結束日期
+
 def init_router(supabase: Client) -> APIRouter:
 
     @router.get("")  # /api/v1/activated
@@ -108,5 +125,51 @@ def init_router(supabase: Client) -> APIRouter:
             {"id": "進行中", "name": "進行中"},
             {"id": "已終止", "name": "已終止"}
         ]
+
+    @router.post("")  # /api/v1/activated
+    async def create_activated_asset(asset: ActivatedAssetCreate):
+        try:
+            # 檢查資產是否存在
+            if asset.asset_id:
+                existing_asset = supabase.table('test_assets') \
+                    .select("id") \
+                    .eq('id', asset.asset_id) \
+                    .single() \
+                    .execute()
+                if not existing_asset.data:
+                    raise HTTPException(status_code=404, detail="找不到指定的資產")
+            
+            # 檢查使用類型是否存在
+            if asset.usage_type_id:
+                usage_type = supabase.table('test_usage_types') \
+                    .select("id") \
+                    .eq('id', asset.usage_type_id) \
+                    .single() \
+                    .execute()
+                if not usage_type.data:
+                    raise HTTPException(status_code=404, detail="找不到指定的使用類型")
+            
+            # 準備新增資料
+            insert_data = asset.dict(exclude_unset=True)
+            
+            # 新增已活化資產
+            response = supabase.table('test_activated_assets') \
+                .insert(insert_data) \
+                .execute()
+                
+            # 如果有關聯資產，更新資產狀態
+            if asset.asset_id:
+                asset_status = '已活化' if asset.status == '進行中' else '未活化'
+                supabase.table('test_assets') \
+                    .update({'status': asset_status, 'updated_at': datetime.now().isoformat()}) \
+                    .eq('id', asset.asset_id) \
+                    .execute()
+                
+            return response.data[0]
+            
+        except Exception as e:
+            if isinstance(e, HTTPException):
+                raise e
+            raise HTTPException(status_code=400, detail=str(e))
 
     return router 
