@@ -60,6 +60,35 @@ def init_router(supabase: Client) -> APIRouter:
             # 更新時間戳記
             update_data["updated_at"] = datetime.now().isoformat()
             
+            # 如果有更新 asset_id 和 status，需要同步更新主要資產的狀態
+            if 'asset_id' in update_data and 'status' in update_data:
+                asset_status = None
+                if update_data['status'] == '進行中':
+                    asset_status = '已活化'
+                elif update_data['status'] == '已終止':
+                    asset_status = '未活化'
+                    
+                if asset_status:
+                    # 更新主要資產狀態
+                    supabase.table('test_assets') \
+                        .update({'status': asset_status, 'updated_at': datetime.now().isoformat()}) \
+                        .eq('id', update_data['asset_id']) \
+                        .execute()
+            # 如果只有更新 status，但已有 asset_id
+            elif 'status' in update_data and existing_asset.data['asset_id']:
+                asset_status = None
+                if update_data['status'] == '進行中':
+                    asset_status = '已活化'
+                elif update_data['status'] == '已終止':
+                    asset_status = '未活化'
+                    
+                if asset_status:
+                    # 更新主要資產狀態
+                    supabase.table('test_assets') \
+                        .update({'status': asset_status, 'updated_at': datetime.now().isoformat()}) \
+                        .eq('id', existing_asset.data['asset_id']) \
+                        .execute()
+            
             # 更新已活化資產
             response = supabase.table('test_activated_assets') \
                 .update(update_data) \
