@@ -210,6 +210,37 @@ def init_router(supabase: Client) -> APIRouter:
                 raise e
             raise HTTPException(status_code=400, detail=str(e))
 
+    @router.delete("/{case_id}")  # /api/v1/cases/{case_id}
+    async def delete_case(case_id: int):
+        try:
+            # 檢查案件是否存在
+            case = supabase.table('test_asset_cases').select("*").eq('id', case_id).single().execute()
+            if not case.data:
+                raise HTTPException(status_code=404, detail="找不到指定的案件")
+            
+            # 如果案件有關聯的資產，將資產狀態改回「未活化」
+            if case.data.get('asset_id'):
+                supabase.table('test_assets').update({
+                    "status": "未活化",
+                    "updated_at": datetime.now().isoformat()
+                }).eq('id', case.data['asset_id']).execute()
+            
+            # 刪除相關的任務
+            supabase.table('test_case_tasks').delete().eq('case_id', case_id).execute()
+            
+            # 刪除相關的會議結論
+            supabase.table('test_case_meeting_conclusions').delete().eq('case_id', case_id).execute()
+            
+            # 刪除案件
+            response = supabase.table('test_asset_cases').delete().eq('id', case_id).execute()
+            
+            return {"message": "案件已成功刪除"}
+            
+        except Exception as e:
+            if isinstance(e, HTTPException):
+                raise e
+            raise HTTPException(status_code=400, detail=str(e))
+
     return router 
 
 
