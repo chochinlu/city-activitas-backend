@@ -38,6 +38,10 @@ class TaskUpdate(BaseModel):
     due_date: Optional[date] = None          # 預期完成時間
     note: Optional[str] = None               # 備註
 
+class MeetingUpdate(BaseModel):
+    meeting_date: Optional[date] = None    # 會議日期
+    content: Optional[str] = None          # 結論內容
+
 def init_router(supabase: Client) -> APIRouter:
 
     @router.get("")  # /api/v1/cases
@@ -314,6 +318,42 @@ def init_router(supabase: Client) -> APIRouter:
                 .execute()
             
             return {"message": "任務已成功刪除"}
+            
+        except Exception as e:
+            if isinstance(e, HTTPException):
+                raise e
+            raise HTTPException(status_code=400, detail=str(e))
+
+    @router.put("/{case_id}/meetings/{meeting_id}")  # /api/v1/cases/{case_id}/meetings/{meeting_id}
+    async def update_case_meeting(case_id: int, meeting_id: int, meeting: MeetingUpdate):
+        try:
+            # 檢查會議結論是否存在且屬於指定的案件
+            existing_meeting = supabase.table('test_case_meeting_conclusions') \
+                .select("*") \
+                .eq('id', meeting_id) \
+                .eq('case_id', case_id) \
+                .single() \
+                .execute()
+                
+            if not existing_meeting.data:
+                raise HTTPException(status_code=404, detail="找不到指定的會議結論")
+            
+            # 準備更新資料
+            update_data = {k: v for k, v in meeting.dict(exclude_unset=True).items() if v is not None}
+            if not update_data:
+                raise HTTPException(status_code=400, detail="沒有提供要更新的資料")
+            
+            # 更新時間戳記
+            update_data["updated_at"] = datetime.now().isoformat()
+            
+            # 更新會議結論
+            response = supabase.table('test_case_meeting_conclusions') \
+                .update(update_data) \
+                .eq('id', meeting_id) \
+                .eq('case_id', case_id) \
+                .execute()
+                
+            return response.data[0]
             
         except Exception as e:
             if isinstance(e, HTTPException):
