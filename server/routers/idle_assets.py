@@ -291,9 +291,43 @@ def init_router(supabase: Client) -> APIRouter:
             # 1. 檢查資產是否存在
             asset = supabase.table('test_assets').select("type").eq('id', asset_id).execute()
             if not asset.data:
-                raise HTTPException(status_code=404, detail="找不到指定的閒置資產")
+                raise HTTPException(status_code=404, detail="找不到指定的��置資產")
+            
+            # 2. 檢查是否有相關引用
+            # 檢查已活化資產表
+            activated = supabase.table('test_activated_assets') \
+                .select("id") \
+                .eq('asset_id', asset_id) \
+                .execute()
+            if activated.data:
+                raise HTTPException(
+                    status_code=400, 
+                    detail="此資產已有活化紀錄，無法刪除"
+                )
+            
+            # 檢查案件表
+            cases = supabase.table('test_asset_cases') \
+                .select("id") \
+                .eq('asset_id', asset_id) \
+                .execute()
+            if cases.data:
+                raise HTTPException(
+                    status_code=400, 
+                    detail="此資產已有相關案件，無法刪除"
+                )
+            
+            # 檢查活化歷史紀錄表
+            history = supabase.table('test_activation_history') \
+                .select("id") \
+                .eq('asset_id', asset_id) \
+                .execute()
+            if history.data:
+                raise HTTPException(
+                    status_code=400, 
+                    detail="此資產已有活化歷史紀錄，無法刪除"
+                )
                 
-            # 2. 根據資產類型刪除相關的明細資料
+            # 3. 根據資產類型刪除相關的明細資料
             if asset.data[0]['type'] == "土地":
                 # 刪除土地明細
                 supabase.table('test_land_details').delete().eq('asset_id', asset_id).execute()
@@ -305,12 +339,14 @@ def init_router(supabase: Client) -> APIRouter:
                 # 刪除建物明細
                 supabase.table('test_building_details').delete().eq('asset_id', asset_id).execute()
                 
-            # 3. 刪除主要資產記錄
+            # 4. 刪除主要資產記錄
             supabase.table('test_assets').delete().eq('id', asset_id).execute()
             
             return {"message": "閒置資產刪除成功", "asset_id": asset_id}
             
         except Exception as e:
+            if isinstance(e, HTTPException):
+                raise e
             raise HTTPException(status_code=400, detail=str(e))
 
     return router 
