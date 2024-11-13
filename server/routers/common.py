@@ -180,4 +180,12 @@ def init_router(supabase: Client) -> APIRouter:
             {"id": "已簽准", "name": "已簽准"}
         ]
 
+    @router.get("/case-task-statuses")
+    async def get_case_task_statuses():
+        return [
+            {"id": "待處理", "name": "待處理"},
+            {"id": "進行中", "name": "進行中"},
+            {"id": "已完成", "name": "已完成"}
+        ]
+
     return router 
