@@ -60,23 +60,4 @@ def init_router(supabase: Client) -> APIRouter:
                 detail=f"Login failed: {str(e)}"
             )
 
-
-    async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
-        try:
-            # 驗證 JWT token
-            user = supabase.auth.get_user(credentials.credentials)
-            return user
-        except Exception as e:
-            raise HTTPException(
-                status_code=401,
-                detail="無效的認證憑證"
-            )
-
-    @router.get("/protected")
-    async def protected(user = Depends(verify_token)):
-        return {
-            "message": "成功訪問受保護的路由",
-            "user": user
-        }
-
     return router 

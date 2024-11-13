@@ -1,9 +1,9 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from supabase import Client
 from typing import Optional
 from datetime import datetime, date
 from pydantic import BaseModel
-
+from dependencies.auth import get_auth_dependency
 router = APIRouter(prefix="/api/v1/activated", tags=["已活化資產"])
 
 class ActivatedAssetUpdate(BaseModel):
@@ -50,13 +50,14 @@ class ActivationHistoryResponse(BaseModel):
     created_by: Optional[int]
 
 def init_router(supabase: Client) -> APIRouter:
+    verify_token = get_auth_dependency(supabase)
 
     @router.get("")  # /api/v1/activated
     async def get_activated_assets():
         response = supabase.table('test_activated_assets_view').select("*").execute()
         return response.data
 
-    @router.put("/{activated_id}")  # /api/v1/activated/{activated_id}
+    @router.put("/{activated_id}", dependencies=[Depends(verify_token)])  # /api/v1/activated/{activated_id}
     async def update_activated_asset(activated_id: int, asset: ActivatedAssetUpdate):
         try:
             # 檢查已活化資產是否存在
@@ -134,7 +135,7 @@ def init_router(supabase: Client) -> APIRouter:
             {"id": "已終止", "name": "已終止"}
         ]
 
-    @router.post("")  # /api/v1/activated
+    @router.post("", dependencies=[Depends(verify_token)])  # /api/v1/activated
     async def create_activated_asset(asset: ActivatedAssetCreate):
         try:
             # 檢查資產是否存在

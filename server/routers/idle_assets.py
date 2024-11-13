@@ -1,9 +1,9 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
 from supabase import Client
-
+from dependencies.auth import get_auth_dependency
 router = APIRouter(prefix="/api/v1/idle", tags=["閒置資產"])
 
 # 定義請求模型
@@ -61,7 +61,8 @@ class AssetUpdate(BaseModel):
     building_land_details: Optional[list[BuildingLandDetailCreate]] = None  # 建物土地明細列表
 
 def init_router(supabase: Client) -> APIRouter:
-    
+    verify_token = get_auth_dependency(supabase)
+
     @router.get("")  # /api/v1/idle
     async def get_idle_assets():
         response = supabase.table('test_idle_assets_view').select("*").execute()
@@ -115,7 +116,7 @@ def init_router(supabase: Client) -> APIRouter:
         except Exception as e:
             raise HTTPException(status_code=400, detail=str(e))
 
-    @router.post("/assets", status_code=201)
+    @router.post("/assets", status_code=201, dependencies=[Depends(verify_token)])
     async def create_idle_asset(asset: AssetCreate):
         try:
             # 1. 新增主要資產
@@ -184,7 +185,7 @@ def init_router(supabase: Client) -> APIRouter:
         except Exception as e:
             raise HTTPException(status_code=400, detail=str(e))
 
-    @router.put("/assets/{asset_id}")
+    @router.put("/assets/{asset_id}", dependencies=[Depends(verify_token)])
     async def update_idle_asset(asset_id: int, asset: AssetUpdate):
         try:
             current_time = datetime.now().isoformat()
@@ -285,7 +286,7 @@ def init_router(supabase: Client) -> APIRouter:
         except Exception as e:
             raise HTTPException(status_code=400, detail=str(e))
 
-    @router.delete("/assets/{asset_id}")
+    @router.delete("/assets/{asset_id}", dependencies=[Depends(verify_token)])
     async def delete_idle_asset(asset_id: int):
         try:
             # 1. 檢查資產是否存在

@@ -16,9 +16,9 @@ supabase: Client = create_client(
 app = FastAPI()
 
 # include routers
+app.include_router(system.init_router(supabase))
+app.include_router(auth.init_router(supabase))
 app.include_router(idle_assets.init_router(supabase))
 app.include_router(active_cases.init_router(supabase))
 app.include_router(activated_assets.init_router(supabase))
-app.include_router(auth.init_router(supabase))
 app.include_router(common.init_router(supabase))
-app.include_router(system.init_router(supabase))

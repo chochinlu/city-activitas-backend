@@ -1,10 +1,15 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from supabase import Client
 from datetime import datetime, date
 from typing import Optional
 from pydantic import BaseModel
+from dependencies.auth import get_auth_dependency
 
-router = APIRouter(prefix="/api/v1/cases", tags=["進行中案件"])
+    
+router = APIRouter(
+    prefix="/api/v1/cases", 
+    tags=["進行中案件"],
+)
 
 # 定義請求模型
 class CaseCreate(BaseModel):
@@ -43,8 +48,9 @@ class MeetingUpdate(BaseModel):
     content: Optional[str] = None          # 結論內容
 
 def init_router(supabase: Client) -> APIRouter:
+    verify_token = get_auth_dependency(supabase)
 
-    @router.get("")  # /api/v1/cases
+    @router.get("")
     async def get_cases():
         response = supabase.table('test_asset_cases_view').select("*").execute()
         return response.data
@@ -113,7 +119,7 @@ def init_router(supabase: Client) -> APIRouter:
             .execute()
         return response.data
 
-    @router.post("/{case_id}/meetings")  # /api/v1/cases/{case_id}/meetings
+    @router.post("/{case_id}/meetings", dependencies=[Depends(verify_token)])  # /api/v1/cases/{case_id}/meetings
     async def create_case_meeting(case_id: int, meeting_date: str, content: str):
         response = supabase.table('test_case_meeting_conclusions') \
             .insert({
@@ -123,7 +129,7 @@ def init_router(supabase: Client) -> APIRouter:
             }).execute()
         return response.data
 
-    @router.post("/{case_id}/tasks")  # /api/v1/cases/{case_id}/tasks
+    @router.post("/{case_id}/tasks", dependencies=[Depends(verify_token)])  # /api/v1/cases/{case_id}/tasks
     async def create_case_task(case_id: int, task: TaskCreate):
         try:
             # 檢查案件是否存在
@@ -153,7 +159,7 @@ def init_router(supabase: Client) -> APIRouter:
                 raise e
             raise HTTPException(status_code=400, detail=str(e))
 
-    @router.post("")  # /api/v1/cases
+    @router.post("", dependencies=[Depends(verify_token)])  # /api/v1/cases
     async def create_case(case: CaseCreate):
         try:
             current_time = datetime.now().isoformat()
@@ -188,7 +194,7 @@ def init_router(supabase: Client) -> APIRouter:
         except Exception as e:
             raise HTTPException(status_code=400, detail=str(e))
 
-    @router.put("/{case_id}")  # /api/v1/cases/{case_id}
+    @router.put("/{case_id}", dependencies=[Depends(verify_token)])  # /api/v1/cases/{case_id}
     async def update_case(case_id: int, case: CaseUpdate):
         try:
             # 檢查案件是否存在
@@ -223,7 +229,7 @@ def init_router(supabase: Client) -> APIRouter:
                 raise e
             raise HTTPException(status_code=400, detail=str(e))
 
-    @router.delete("/{case_id}")  # /api/v1/cases/{case_id}
+    @router.delete("/{case_id}", dependencies=[Depends(verify_token)])  # /api/v1/cases/{case_id}
     async def delete_case(case_id: int):
         try:
             # 檢查案件是否存在
@@ -254,7 +260,7 @@ def init_router(supabase: Client) -> APIRouter:
                 raise e
             raise HTTPException(status_code=400, detail=str(e))
 
-    @router.put("/{case_id}/tasks/{task_id}")  # /api/v1/cases/{case_id}/tasks/{task_id}
+    @router.put("/{case_id}/tasks/{task_id}", dependencies=[Depends(verify_token)])  # /api/v1/cases/{case_id}/tasks/{task_id}
     async def update_case_task(case_id: int, task_id: int, task: TaskUpdate):
         try:
             # 檢查任務是否存在且屬於指定的案件
@@ -296,7 +302,7 @@ def init_router(supabase: Client) -> APIRouter:
                 raise e
             raise HTTPException(status_code=400, detail=str(e))
 
-    @router.delete("/{case_id}/tasks/{task_id}")  # /api/v1/cases/{case_id}/tasks/{task_id}
+    @router.delete("/{case_id}/tasks/{task_id}", dependencies=[Depends(verify_token)])  # /api/v1/cases/{case_id}/tasks/{task_id}
     async def delete_case_task(case_id: int, task_id: int):
         try:
             # 檢查任務是否存在且屬於指定的案件
@@ -324,7 +330,7 @@ def init_router(supabase: Client) -> APIRouter:
                 raise e
             raise HTTPException(status_code=400, detail=str(e))
 
-    @router.put("/{case_id}/meetings/{meeting_id}")  # /api/v1/cases/{case_id}/meetings/{meeting_id}
+    @router.put("/{case_id}/meetings/{meeting_id}", dependencies=[Depends(verify_token)])  # /api/v1/cases/{case_id}/meetings/{meeting_id}
     async def update_case_meeting(case_id: int, meeting_id: int, meeting: MeetingUpdate):
         try:
             # 檢查會議結論是否存在且屬於指定的案件
@@ -360,7 +366,7 @@ def init_router(supabase: Client) -> APIRouter:
                 raise e
             raise HTTPException(status_code=400, detail=str(e))
 
-    @router.delete("/{case_id}/meetings/{meeting_id}")  # /api/v1/cases/{case_id}/meetings/{meeting_id}
+    @router.delete("/{case_id}/meetings/{meeting_id}", dependencies=[Depends(verify_token)])  # /api/v1/cases/{case_id}/meetings/{meeting_id}
     async def delete_case_meeting(case_id: int, meeting_id: int):
         try:
             # 檢查會議結論是否存在且屬於指定的案件

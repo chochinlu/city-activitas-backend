@@ -1,13 +1,32 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException, Depends
 from supabase import Client
 from typing import Optional
 from datetime import datetime
-from fastapi import HTTPException 
 from pydantic import BaseModel
+from dependencies.auth import get_auth_dependency
 
 router = APIRouter(prefix="/api/v1/common", tags=["共用資料"])
 
+# 定義請求模型
+class AgencyCreate(BaseModel):
+    name: str                   # 機關名稱
+    note: Optional[str] = None  # 備註
+
+class AgencyUpdate(BaseModel):
+    name: Optional[str] = None
+    note: Optional[str] = None
+  
+class UsageTypeCreate(BaseModel):
+    name: str                   # 使用類型名稱
+    note: Optional[str] = None  # 備註
+
+class UsageTypeUpdate(BaseModel):
+    name: Optional[str] = None
+    note: Optional[str] = None
+
+
 def init_router(supabase: Client) -> APIRouter:
+    verify_token = get_auth_dependency(supabase)
 
     @router.get("/agencies")
     async def get_agencies():
@@ -19,25 +38,7 @@ def init_router(supabase: Client) -> APIRouter:
         response = supabase.table('test_agencies').select("*").eq('id', id).single().execute()
         return response.data
 
-    # 定義請求模型
-    class AgencyCreate(BaseModel):
-        name: str                   # 機關名稱
-        note: Optional[str] = None  # 備註
-
-    class AgencyUpdate(BaseModel):
-        name: Optional[str] = None
-        note: Optional[str] = None
-  
-    class UsageTypeCreate(BaseModel):
-        name: str                   # 使用類型名稱
-        note: Optional[str] = None  # 備註
-
-    class UsageTypeUpdate(BaseModel):
-        name: Optional[str] = None
-        note: Optional[str] = None
-
-
-    @router.post("/agencies", status_code=201)
+    @router.post("/agencies", status_code=201, dependencies=[Depends(verify_token)])
     async def create_agency(agency: AgencyCreate):
         try:
             current_time = datetime.now().isoformat()
@@ -51,7 +52,7 @@ def init_router(supabase: Client) -> APIRouter:
         except Exception as e:
             raise HTTPException(status_code=400, detail=str(e))
 
-    @router.put("/agencies/{agency_id}")
+    @router.put("/agencies/{agency_id}", dependencies=[Depends(verify_token)])
     async def update_agency(agency_id: int, agency: AgencyUpdate):
         try:
             current_time = datetime.now().isoformat()
@@ -67,7 +68,7 @@ def init_router(supabase: Client) -> APIRouter:
         except Exception as e:
             raise HTTPException(status_code=400, detail=str(e))
 
-    @router.delete("/agencies/{agency_id}")
+    @router.delete("/agencies/{agency_id}", dependencies=[Depends(verify_token)])
     async def delete_agency(agency_id: int):
         try:
             # 檢查是否有相關的閒置資產
@@ -104,7 +105,7 @@ def init_router(supabase: Client) -> APIRouter:
         response = supabase.table('test_usage_types').select("*").eq('id', id).single().execute()
         return response.data
 
-    @router.post("/usage-types", status_code=201)
+    @router.post("/usage-types", status_code=201, dependencies=[Depends(verify_token)])
     async def create_usage_type(usage_type: UsageTypeCreate):
         try:
             usage_type_data = usage_type.dict()
@@ -114,7 +115,7 @@ def init_router(supabase: Client) -> APIRouter:
         except Exception as e:
             raise HTTPException(status_code=400, detail=str(e))
 
-    @router.put("/usage-types/{usage_type_id}")
+    @router.put("/usage-types/{usage_type_id}", dependencies=[Depends(verify_token)])
     async def update_usage_type(usage_type_id: int, usage_type: UsageTypeUpdate):
         try:
             update_data = usage_type.dict(exclude_unset=True)
@@ -127,7 +128,7 @@ def init_router(supabase: Client) -> APIRouter:
         except Exception as e:
             raise HTTPException(status_code=400, detail=str(e))
 
-    @router.delete("/usage-types/{usage_type_id}")
+    @router.delete("/usage-types/{usage_type_id}", dependencies=[Depends(verify_token)])
     async def delete_usage_type(usage_type_id: int):
         try:
             # 檢查是否有相關的閒置資產活化案例
