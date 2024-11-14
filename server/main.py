@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from supabase import create_client, Client
 import os
@@ -14,6 +15,19 @@ supabase: Client = create_client(
 )
 
 app = FastAPI()
+
+# 設定 CORS
+origins = [
+    "http://localhost:3000",  # React / Next.js
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # include routers
 app.include_router(system.init_router(supabase))
