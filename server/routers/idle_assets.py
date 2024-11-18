@@ -1,9 +1,10 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, status
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
 from supabase import Client
 from dependencies.auth import get_auth_dependency
+import postgrest
 router = APIRouter(prefix="/api/v1/idle", tags=["閒置資產"])
 
 # 定義請求模型
@@ -65,8 +66,25 @@ def init_router(supabase: Client) -> APIRouter:
 
     @router.get("")  # /api/v1/idle
     async def get_idle_assets():
-        response = supabase.table('test_idle_assets_view').select("*").execute()
-        return response.data
+        try:
+            response = supabase.table('test_idle_assets_view').select("*").execute()
+            return response.data
+        
+        except postgrest.exceptions.APIError as e:
+            if e.code == 'PGRST301' and 'JWT expired' in str(e):
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail={
+                        'code': 'JWT_EXPIRED',
+                        'message': 'JWT token has expired',
+                        'hint': 'Please login again to get a new token'
+                    }
+                )
+            # 處理其他 API 錯誤
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=str(e)
+            )
 
     @router.get("/assets/{asset_id}")  # /api/v1/idle/assets/{asset_id}
     async def get_idle_asset_by_id(asset_id: int):
@@ -114,6 +132,34 @@ def init_router(supabase: Client) -> APIRouter:
             return response.data[0]
             
         except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
+    @router.get("/buildings/{asset_id}/lands")  # /api/v1/idle/buildings/{asset_id}/lands
+    async def get_building_land_details(asset_id: int):
+        try:
+            # 先確認資產存在且為建物類型
+            asset = supabase.table('test_assets').select("type").eq('id', asset_id).execute()
+            
+            if not asset.data:
+                raise HTTPException(
+                    status_code=404, 
+                    detail="找不到指定的資產"
+                )
+                
+            if asset.data[0]['type'] != "建物":
+                raise HTTPException(
+                    status_code=400, 
+                    detail="此資產不是建物類型"
+                )
+            
+            # 查詢建物土地關聯資料
+            response = supabase.table('test_building_land_details').select("*").eq('asset_id', asset_id).execute()
+            
+            return response.data
+            
+        except Exception as e:
+            if isinstance(e, HTTPException):
+                raise e
             raise HTTPException(status_code=400, detail=str(e))
 
     @router.post("/assets", status_code=201, dependencies=[Depends(verify_token)])
@@ -292,7 +338,7 @@ def init_router(supabase: Client) -> APIRouter:
             # 1. 檢查資產是否存在
             asset = supabase.table('test_assets').select("type").eq('id', asset_id).execute()
             if not asset.data:
-                raise HTTPException(status_code=404, detail="找不到指定的��置資產")
+                raise HTTPException(status_code=404, detail="找不到指定的閒置資產")
             
             # 2. 檢查是否有相關引用
             # 檢查已活化資產表

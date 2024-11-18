@@ -4,6 +4,8 @@ from typing import Optional
 from datetime import datetime
 from pydantic import BaseModel
 from dependencies.auth import get_auth_dependency
+from utils.error_handlers import handle_postgrest_error
+from postgrest.exceptions import APIError
 
 router = APIRouter(prefix="/api/v1/common", tags=["共用資料"])
 
@@ -30,8 +32,11 @@ def init_router(supabase: Client) -> APIRouter:
 
     @router.get("/agencies")
     async def get_agencies():
-        response = supabase.table('test_agencies').select("*").execute()
-        return response.data
+        try:
+            response = supabase.table('agencies').select("*").execute()
+            return response.data
+        except APIError as e:
+            handle_postgrest_error(e)
 
     @router.get("/agencies/{id}")
     async def get_agency(id: int):
