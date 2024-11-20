@@ -37,6 +37,11 @@ class BuildingDetailUpdate(BaseModel):
     vacancy_rate: Optional[int] = None         # 空置比例，例如：100
     note: Optional[str] = None                 # 備註，例如：2樓空置、3樓部分空間約400坪提供給使用
 
+class BuildingLandDetailUpdate(BaseModel):
+    lot_number: Optional[str] = None      # 地號
+    land_type: Optional[str] = None       # 土地種類 (市有土地/國有土地/私有土地)
+    land_manager: Optional[str] = None    # 土地管理者
+
 router = APIRouter(prefix="/api/v1/assets", tags=["資產"])
 
 def init_router(supabase: Client) -> APIRouter:
@@ -173,5 +178,41 @@ def init_router(supabase: Client) -> APIRouter:
             if isinstance(e, HTTPException):
                 raise e
             raise HTTPException(status_code=400, detail=str(e))
+
+    @router.patch("/building-lands/{detail_id}", dependencies=[Depends(verify_token)])
+    async def update_building_land_detail(detail_id: int, detail: BuildingLandDetailUpdate):
+        """
+        更新建物土地關聯資料
+        
+        範例:
+        ```json
+        {
+            "lot_number": "80-8",
+            "land_type": "市有土地",
+            "land_manager": "財政部國有財產署"
+        }
+        ```
+        """
+        try:
+            # 1. 檢查建物土地關聯是否存在
+            existing_detail = supabase.table('test_building_land_details').select("*").eq('id', detail_id).execute()
+            if not existing_detail.data:
+                raise HTTPException(status_code=404, detail="找不到指定的建物土地關聯資料")
+            
+            # 2. 準備更新資料
+            update_data = detail.dict(exclude_unset=True)  # 只包含有設定值的欄位
+            update_data["updated_at"] = datetime.now().isoformat()
+            
+            # 3. 更新建物土地關聯資料
+            response = supabase.table('test_building_land_details').update(update_data).eq('id', detail_id).execute()
+            
+            return {"message": "建物土地關聯更新成功", "detail_id": detail_id}
+            
+        except Exception as e:
+            if isinstance(e, HTTPException):
+                raise e
+            raise HTTPException(status_code=400, detail=str(e))
+          
+  
 
     return router 
