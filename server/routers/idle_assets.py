@@ -86,11 +86,20 @@ def init_router(supabase: Client) -> APIRouter:
 
     @router.get("/lands")  # /api/v1/idle/lands
     async def get_idle_land_assets():
-        response = supabase.table('test_idle_land_assets_view').select("*").execute()
-        return response.data
+        """
+        取得所有閒置土地資產, 包含assets 和 land_details 資料
+        """
+        try:
+            response = supabase.table('test_idle_land_assets_view').select("*").execute()
+            return response.data
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
       
     @router.get("/lands/{asset_id}")  # /api/v1/idle/lands/{asset_id}
     async def get_idle_land_asset_by_id(asset_id: int):
+        """
+        取得指定閒置土地資產, 包含assets 和 land_details 資料
+        """
         try:
             response = supabase.table('test_idle_land_assets_view').select("*").eq('資產ID', asset_id).execute()
             
@@ -104,11 +113,20 @@ def init_router(supabase: Client) -> APIRouter:
 
     @router.get("/buildings")  # /api/v1/idle/buildings
     async def get_idle_building_assets():
-        response = supabase.table('test_idle_building_assets_view').select("*").execute()
-        return response.data
+        """
+        取得所有閒置建物資產, 包含assets 和 building_details 資料
+        """
+        try:
+            response = supabase.table('test_idle_building_assets_view').select("*").execute()
+            return response.data
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
 
     @router.get("/buildings/{asset_id}")  # /api/v1/idle/buildings/{asset_id}
     async def get_idle_building_asset_by_id(asset_id: int):
+        """
+        取得指定閒置建物資產, 包含assets 和 building_details 資料
+        """
         try:
             response = supabase.table('test_idle_building_assets_view').select("*").eq('資產ID', asset_id).execute()
             
@@ -122,6 +140,9 @@ def init_router(supabase: Client) -> APIRouter:
 
     @router.get("/buildings/{asset_id}/lands")  # /api/v1/idle/buildings/{asset_id}/lands
     async def get_building_land_details(asset_id: int):
+        """
+        取得指定閒置建物資產的建物土地關聯資料
+        """
         try:
             # 先確認資產存在且為建物類型
             asset = supabase.table('test_assets').select("type").eq('id', asset_id).execute()
