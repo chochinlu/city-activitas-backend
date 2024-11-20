@@ -365,7 +365,38 @@ def init_router(supabase: Client) -> APIRouter:
                 raise e
             raise HTTPException(status_code=400, detail=str(e))
 
-    return router 
-  
-  
-  
+
+
+    @router.patch("/lands/{land_id}", dependencies=[Depends(verify_token)])
+    async def update_land_detail(land_id: int, land: LandDetailCreate):
+        """
+        更新土地明細資料
+        
+        範例:
+        ```json
+        {
+            "area": 8000,
+            "current_status": "部分空置",
+            "vacancy_rate": 50
+        }
+        ```
+        """
+        try:
+            # 1. 檢查土地明細是否存在
+            existing_land = supabase.table('test_land_details').select("*").eq('id', land_id).execute()
+            if not existing_land.data:
+                raise HTTPException(status_code=404, detail="找不到指定的土地明細")
+            
+            # 2. 準備更新資料
+            update_data = land.dict(exclude_unset=True)  # 只包含有設定值的欄位
+            update_data["updated_at"] = datetime.now().isoformat()
+            
+            # 3. 更新土地明細資料
+            response = supabase.table('test_land_details').update(update_data).eq('id', land_id).execute()
+            
+            return {"message": "土地明細更新成功", "land_id": land_id}
+            
+        except Exception as e:
+            if isinstance(e, HTTPException):
+                raise e
+            raise HTTPException(status_code=400, detail=str(e))
