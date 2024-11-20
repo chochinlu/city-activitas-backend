@@ -167,7 +167,7 @@ def init_router(supabase: Client) -> APIRouter:
             # 3. 更新建物明細資料
             response = supabase.table('test_building_details').update(update_data).eq('id', building_id).execute()
             
-            return {"message": "建物明細更���成功", "building_id": building_id}
+            return {"message": "建物明細更新成功", "building_id": building_id}
             
         except Exception as e:
             if isinstance(e, HTTPException):
