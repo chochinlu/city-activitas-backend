@@ -5,7 +5,7 @@ from supabase import create_client, Client
 import os
 from datetime import datetime
 
-from routers import idle_assets, active_cases, activated_assets, auth, common, system
+from routers import idle_assets, active_cases, activated_assets, auth, common, system, assets
 
 load_dotenv()
 
@@ -32,6 +32,7 @@ app.add_middleware(
 # include routers
 app.include_router(system.init_router(supabase))
 app.include_router(auth.init_router(supabase))
+app.include_router(assets.init_router(supabase))
 app.include_router(idle_assets.init_router(supabase))
 app.include_router(active_cases.init_router(supabase))
 app.include_router(activated_assets.init_router(supabase))
