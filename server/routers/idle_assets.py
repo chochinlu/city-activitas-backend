@@ -104,13 +104,13 @@ def init_router(supabase: Client) -> APIRouter:
 
     @router.get("/buildings")  # /api/v1/idle/buildings
     async def get_idle_building_assets():
-        response = supabase.table('test_idle_building_assets').select("*").execute()
+        response = supabase.table('test_idle_building_assets_view').select("*").execute()
         return response.data
 
     @router.get("/buildings/{asset_id}")  # /api/v1/idle/buildings/{asset_id}
     async def get_idle_building_asset_by_id(asset_id: int):
         try:
-            response = supabase.table('test_idle_building_assets').select("*").eq('資產ID', asset_id).execute()
+            response = supabase.table('test_idle_building_assets_view').select("*").eq('資產ID', asset_id).execute()
             
             if not response.data:
                 raise HTTPException(status_code=404, detail="找不到指定的閒置建物資產")
