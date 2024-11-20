@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Tuple
 from datetime import datetime
 from supabase import Client
 from dependencies.auth import get_auth_dependency
@@ -12,8 +12,8 @@ class AssetUpdate(BaseModel):
     district_id: Optional[int] = None         # 行政區ID
     section: Optional[str] = None             # 地段
     address: Optional[str] = None             # 地址
-    coordinates: Optional[tuple[float, float]] = None          # 定位座標
-    area_coordinates: Optional[list[tuple[float, float]]] = None  # 區域座標組
+    coordinates: Optional[str] = None          # 接收 "(120.123, 23.456)" 格式的字串
+    area_coordinates: Optional[str] = None     # 接收多邊形座標字串
     target_name: Optional[str] = None         # 標的名稱
     status: Optional[str] = None              # 狀態
 
@@ -57,7 +57,8 @@ def init_router(supabase: Client) -> APIRouter:
         {
             "address": "新地址",
             "status": "已活化",
-            "coordinates": [120.123, 23.456]
+            "coordinates": "(120.123, 23.456)",
+            "area_coordinates": "((120.123, 23.456),(120.123, 23.456),(120.123, 23.456))"
         }
         ```
         """
@@ -68,43 +69,26 @@ def init_router(supabase: Client) -> APIRouter:
                 raise HTTPException(status_code=404, detail="找不到指定的資產")
             
             # 2. 準備更新資料
-            update_data = {}
+            update_data = asset.dict(exclude_unset=True)
             
-            # 只更新有提供的欄位
-            if asset.type is not None:
-                update_data["type"] = asset.type
-            if asset.agency_id is not None:
-                update_data["agency_id"] = asset.agency_id
-            if asset.district_id is not None:
-                update_data["district_id"] = asset.district_id
-            if asset.section is not None:
-                update_data["section"] = asset.section
-            if asset.address is not None:
-                update_data["address"] = asset.address
-            if asset.target_name is not None:
-                update_data["target_name"] = asset.target_name
-            if asset.status is not None:
-                update_data["status"] = asset.status
-                
-            # 處理座標資料
-            if asset.coordinates is not None:
-                update_data["coordinates"] = f"({asset.coordinates[0]},{asset.coordinates[1]})"
+            # 3. 處理座標資料
+            if 'coordinates' in update_data:
+                # 將 "(120.123, 23.456)" 轉換為 PostgreSQL POINT 格式
+                coordinates_str = update_data['coordinates'].strip('()')
+                x, y = map(float, coordinates_str.split(','))
+                update_data['coordinates'] = f"({x},{y})"  # PostgreSQL POINT 格式
             
-            if asset.area_coordinates is not None:
-                points = [f"({x},{y})" for x, y in asset.area_coordinates]
-                if points[0] != points[-1]:
-                    points.append(points[0])
-                update_data["area_coordinates"] = f"({','.join(points)})"
+            if 'area_coordinates' in update_data:
+                # 這裡需要根據你的多邊形座標格式進行相應的轉換
+                # 假設接收的是 "((x1,y1),(x2,y2),(x3,y3))" 格式
+                update_data['area_coordinates'] = update_data['area_coordinates']
             
-            # 加入更新時間
             update_data["updated_at"] = datetime.now().isoformat()
             
-            # 3. 更新資產資料
-            if update_data:
-                response = supabase.table('test_assets').update(update_data).eq('id', asset_id).execute()
-                return {"message": "資產更新成功", "asset_id": asset_id}
-            else:
-                return {"message": "沒有資料需要更新", "asset_id": asset_id}
+            # 4. 更新資產資料
+            response = supabase.table('test_assets').update(update_data).eq('id', asset_id).execute()
+            
+            return {"message": "資產更新成功", "asset_id": asset_id}
             
         except Exception as e:
             if isinstance(e, HTTPException):
