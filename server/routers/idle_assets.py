@@ -372,6 +372,8 @@ def init_router(supabase: Client) -> APIRouter:
         """
         更新土地明細資料
         
+        注意這裡request是使用 land_id 不是 asset_id
+        
         範例:
         ```json
         {
@@ -400,3 +402,5 @@ def init_router(supabase: Client) -> APIRouter:
             if isinstance(e, HTTPException):
                 raise e
             raise HTTPException(status_code=400, detail=str(e))
+
+    return router
