@@ -370,7 +370,7 @@ def init_router(supabase: Client) -> APIRouter:
     @router.patch("/lands/{land_id}", dependencies=[Depends(verify_token)])
     async def update_land_detail(land_id: int, land: LandDetailCreate):
         """
-        更新土地明細資料
+        更新土地land_details明細資料
         
         注意這裡request是使用 land_id 不是 asset_id
         
@@ -397,6 +397,44 @@ def init_router(supabase: Client) -> APIRouter:
             response = supabase.table('test_land_details').update(update_data).eq('id', land_id).execute()
             
             return {"message": "土地明細更新成功", "land_id": land_id}
+            
+        except Exception as e:
+            if isinstance(e, HTTPException):
+                raise e
+            raise HTTPException(status_code=400, detail=str(e))
+        
+    
+
+    @router.patch("/buildings/{building_id}", dependencies=[Depends(verify_token)])
+    async def update_building_detail(building_id: int, building: BuildingDetailCreate):
+        """
+        更新建物building_details明細資料
+        
+        注意這裡request是使用 building_id 不是 asset_id
+        
+        範例:
+        ```json
+        {
+            "current_status": "部分空置",
+            "vacancy_rate": 50,
+            "note": "2樓空置、3樓部分空間約400坪提供給使用"
+        }
+        ```
+        """
+        try:
+            # 1. 檢查建物明細是否存在
+            existing_building = supabase.table('test_building_details').select("*").eq('id', building_id).execute()
+            if not existing_building.data:
+                raise HTTPException(status_code=404, detail="找不到指定的建物明細")
+            
+            # 2. 準備更新資料
+            update_data = building.dict(exclude_unset=True)  # 只包含有設定值的欄位
+            update_data["updated_at"] = datetime.now().isoformat()
+            
+            # 3. 更新建物明細資料
+            response = supabase.table('test_building_details').update(update_data).eq('id', building_id).execute()
+            
+            return {"message": "建物明細更新成功", "building_id": building_id}
             
         except Exception as e:
             if isinstance(e, HTTPException):
