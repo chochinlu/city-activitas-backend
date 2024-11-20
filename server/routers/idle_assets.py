@@ -232,7 +232,6 @@ def init_router(supabase: Client) -> APIRouter:
             raise HTTPException(status_code=400, detail=str(e))
 
 
-
     @router.delete("/assets/{asset_id}", dependencies=[Depends(verify_token)])
     async def delete_idle_asset(asset_id: int):
         try:
@@ -291,6 +290,75 @@ def init_router(supabase: Client) -> APIRouter:
             supabase.table('test_assets').delete().eq('id', asset_id).execute()
             
             return {"message": "閒置資產刪除成功", "asset_id": asset_id}
+            
+        except Exception as e:
+            if isinstance(e, HTTPException):
+                raise e
+            raise HTTPException(status_code=400, detail=str(e))
+
+    @router.patch("/assets/{asset_id}", dependencies=[Depends(verify_token)])
+    async def update_idle_asset(asset_id: int, asset: AssetUpdate):
+        """
+        更新資產資料
+        
+        雖然放在idle asset api, 但實際上是更新assets表格資料, 
+        
+        不更新明細資料(land_details, building_details, building_land_details)
+        
+        範例:
+        
+        ```json
+        {
+            "address": "新地址",
+            "status": "已活化",
+            "coordinates": [120.123, 23.456]
+        }        
+        ```
+        """
+        try:
+            # 1. 檢查資產是否存在
+            existing_asset = supabase.table('test_assets').select("*").eq('id', asset_id).execute()
+            if not existing_asset.data:
+                raise HTTPException(status_code=404, detail="找不到指定的閒置資產")
+            
+            # 2. 準備更新資料
+            update_data = {}
+            
+            # 只更新有提供的欄位
+            if asset.type is not None:
+                update_data["type"] = asset.type
+            if asset.agency_id is not None:
+                update_data["agency_id"] = asset.agency_id
+            if asset.district_id is not None:
+                update_data["district_id"] = asset.district_id
+            if asset.section is not None:
+                update_data["section"] = asset.section
+            if asset.address is not None:
+                update_data["address"] = asset.address
+            if asset.target_name is not None:
+                update_data["target_name"] = asset.target_name
+            if asset.status is not None:
+                update_data["status"] = asset.status
+                
+            # 處理座標資料
+            if asset.coordinates is not None:
+                update_data["coordinates"] = f"({asset.coordinates[0]},{asset.coordinates[1]})"
+            
+            if asset.area_coordinates is not None:
+                points = [f"({x},{y})" for x, y in asset.area_coordinates]
+                if points[0] != points[-1]:
+                    points.append(points[0])
+                update_data["area_coordinates"] = f"({','.join(points)})"
+            
+            # 加入更新時間
+            update_data["updated_at"] = datetime.now().isoformat()
+            
+            # 3. 更新資產資料
+            if update_data:
+                response = supabase.table('test_assets').update(update_data).eq('id', asset_id).execute()
+                return {"message": "資產更新成功", "asset_id": asset_id}
+            else:
+                return {"message": "沒有資料需要更新", "asset_id": asset_id}
             
         except Exception as e:
             if isinstance(e, HTTPException):
