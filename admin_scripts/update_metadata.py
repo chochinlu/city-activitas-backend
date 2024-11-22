@@ -68,5 +68,6 @@ def main():
     
     update_user_metadata(args.email, args.password, args.role)
 
+# cli usage: python update_metadata.py --email <email> --password <password> --role <role>
 if __name__ == "__main__":
     main()
