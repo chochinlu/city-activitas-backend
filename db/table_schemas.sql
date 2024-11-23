@@ -550,6 +550,7 @@ CREATE TABLE asset_proposals (
     section VARCHAR(100) NOT NULL,
     lot_number VARCHAR(50) NOT NULL,
     address TEXT,
+    coordinates POINT,
     
     -- 執照相關
     has_usage_license VARCHAR(10) CHECK (has_usage_license IN ('有', '無')),
