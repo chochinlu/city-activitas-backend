@@ -314,7 +314,7 @@ COMMENT ON COLUMN activated_asset_demand_agencies.agency_id IS '需求機關ID';
 --   }
 -- }
 
--- // 已活化資產���料表
+-- // 已活化資產料表
 CREATE TABLE activated_assets (
     id SERIAL PRIMARY KEY,
     asset_id INTEGER REFERENCES assets(id),  -- 可為空
@@ -564,9 +564,8 @@ CREATE TABLE asset_proposals (
     floor_area TEXT,
     
     -- 使用狀況
+    usage_description TEXT,             -- 目前使用情形說明
     usage_status VARCHAR(50) NOT NULL,  -- 閒置、低度利用
-    usage_description TEXT,             -- 使用情形說明
-    current_status VARCHAR(50),         -- 空置、部分空置
     
     -- 活化相關
     activation_status TEXT,             -- 活化辦理情形
@@ -611,7 +610,6 @@ COMMENT ON COLUMN asset_proposals.land_use IS '土地用途，例如：特定目
 COMMENT ON COLUMN asset_proposals.area IS '面積(平方公尺)';
 COMMENT ON COLUMN asset_proposals.floor_area IS '樓地板面積(平方公尺)，例如：2樓:3729.7 3樓:3426.2';
 COMMENT ON COLUMN asset_proposals.usage_status IS '資產使用情形：閒置、低度利用';
-COMMENT ON COLUMN asset_proposals.current_status IS '現況：空置、部分空置';
 COMMENT ON COLUMN asset_proposals.proposal_status IS '提案狀態：提案中、需要修改、不執行、已核准';
 
 
