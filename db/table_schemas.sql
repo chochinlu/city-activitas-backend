@@ -615,4 +615,50 @@ COMMENT ON COLUMN asset_proposals.current_status IS '現況：空置、部分空
 COMMENT ON COLUMN asset_proposals.proposal_status IS '提案狀態：提案中、需要修改、不執行、已核准';
 
 
+-- // 需求資產表
+CREATE TABLE asset_requirements (
+    id SERIAL PRIMARY KEY,
+    agency_id INTEGER NOT NULL REFERENCES agencies(id),
+    purpose TEXT NOT NULL,                    -- 需求用途
+    asset_type VARCHAR(20) NOT NULL 
+        CHECK (asset_type IN ('土地', '建物')), -- 資產種類
+    preferred_floor TEXT,                     -- 希望樓層
+    area DECIMAL,                            -- 面積(平方公尺)
+    district_id INTEGER REFERENCES districts(id), -- 希望地點
+    urgency_note TEXT,                       -- 備註(必要性、急迫性說明)
+    funding_source TEXT,                     -- 經費來源
+
+    reporter_email VARCHAR(255) NOT NULL,
+    requirement_status VARCHAR(20) NOT NULL DEFAULT '提案中'
+        CHECK (requirement_status IN ('提案中', '需要修改', '不執行', '已核准')),
+
+    -- 時間戳記
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    -- 審核相關
+    reviewer_note TEXT,                -- 審核者備註
+    reviewed_at TIMESTAMP,             -- 審核時間
+    reviewer_id INTEGER                -- 審核者ID，如果有使用者表的話可以加上 REFERENCES
+);
+
+-- 建立索引
+CREATE INDEX idx_asset_requirements_agency_id ON asset_requirements(agency_id);
+CREATE INDEX idx_asset_requirements_district_id ON asset_requirements(district_id);
+CREATE INDEX idx_asset_requirements_requirement_status ON asset_requirements(requirement_status);
+CREATE INDEX idx_asset_requirements_asset_type ON asset_requirements(asset_type);
+
+-- 添加欄位註釋
+COMMENT ON TABLE asset_requirements IS '需求資產表';
+COMMENT ON COLUMN asset_requirements.agency_id IS '需求機關ID';
+COMMENT ON COLUMN asset_requirements.purpose IS '需求用途說明';
+COMMENT ON COLUMN asset_requirements.asset_type IS '資產種類：土地/建物';
+COMMENT ON COLUMN asset_requirements.preferred_floor IS '希望樓層，例如：1樓、2-3樓';
+COMMENT ON COLUMN asset_requirements.area IS '需求面積(平方公尺)';
+COMMENT ON COLUMN asset_requirements.district_id IS '希望地點(行政區)';
+COMMENT ON COLUMN asset_requirements.urgency_note IS '備註(說明必要性、急迫性)';
+COMMENT ON COLUMN asset_requirements.funding_source IS '經費來源';
+COMMENT ON COLUMN asset_requirements.requirement_status IS '需求狀態：提案中、需要修改、不執行、已核准';
+
+
 

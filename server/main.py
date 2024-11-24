@@ -5,7 +5,7 @@ from supabase import create_client, Client
 import os
 from datetime import datetime
 
-from routers import idle_assets, active_cases, activated_assets, auth, common, system, assets
+from routers import idle_assets, active_cases, activated_assets, auth, common, system, assets, proposals
 
 load_dotenv()
 
@@ -37,3 +37,4 @@ app.include_router(idle_assets.init_router(supabase))
 app.include_router(active_cases.init_router(supabase))
 app.include_router(activated_assets.init_router(supabase))
 app.include_router(common.init_router(supabase))
+app.include_router(proposals.init_router(supabase))
