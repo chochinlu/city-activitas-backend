@@ -218,9 +218,6 @@ def init_router(supabase: Client) -> APIRouter:
         - **title**: 圖片標題
         - **description**: 圖片說明（選填）
         """
-        print(file)
-        print(image_data)
-        print(asset_id)
         try:
             # 1. 檢查資產是否存在
             existing_asset = supabase.table('test_assets').select("*").eq('id', asset_id).execute()
@@ -250,11 +247,12 @@ def init_router(supabase: Client) -> APIRouter:
                 "editor_email": "user@example.com"  # 應從 token 中取得
             }
             
-            response = supabase.table('asset_images').insert(image_info).execute()
+            response = supabase.table('test_asset_images').insert(image_info).execute()
             
             return {"message": "圖片上傳成功", "image": response.data[0]}
             
         except Exception as e:
+            print(e)
             if isinstance(e, HTTPException):
                 raise e
             raise HTTPException(status_code=400, detail=str(e))
@@ -265,7 +263,7 @@ def init_router(supabase: Client) -> APIRouter:
         取得資產的所有圖片
         """
         try:
-            response = supabase.table('asset_images').select("*").eq('asset_id', asset_id).execute()
+            response = supabase.table('test_asset_images').select("*").eq('asset_id', asset_id).execute()
             return response.data
             
         except Exception as e:
@@ -286,7 +284,7 @@ def init_router(supabase: Client) -> APIRouter:
         """
         try:
             # 1. 檢查圖片是否存在
-            existing_image = supabase.table('asset_images').select("*").eq('id', image_id).execute()
+            existing_image = supabase.table('test_asset_images').select("*").eq('id', image_id).execute()
             if not existing_image.data:
                 raise HTTPException(status_code=404, detail="找不到指定的圖片")
             
@@ -295,7 +293,7 @@ def init_router(supabase: Client) -> APIRouter:
             update_data["updated_at"] = datetime.now().isoformat()
             
             # 3. 更新圖片資訊
-            response = supabase.table('asset_images').update(update_data).eq('id', image_id).execute()
+            response = supabase.table('test_asset_images').update(update_data).eq('id', image_id).execute()
             
             return {"message": "圖片資訊更新成功", "image": response.data[0]}
             
@@ -311,7 +309,7 @@ def init_router(supabase: Client) -> APIRouter:
         """
         try:
             # 1. 取得圖片資訊
-            image = supabase.table('asset_images').select("*").eq('id', image_id).execute()
+            image = supabase.table('test_asset_images').select("*").eq('id', image_id).execute()
             if not image.data:
                 raise HTTPException(status_code=404, detail="找不到指定的圖片")
             
@@ -320,7 +318,7 @@ def init_router(supabase: Client) -> APIRouter:
             supabase.storage.from_('assets').remove([file_path])
             
             # 3. 從資料庫刪除記錄
-            response = supabase.table('asset_images').delete().eq('id', image_id).execute()
+            response = supabase.table('test_asset_images').delete().eq('id', image_id).execute()
             
             return {"message": "圖片刪除成功"}
             
