@@ -8,8 +8,8 @@ from dependencies.auth import get_auth_dependency
 # 定義請求模型
 class AssetUpdate(BaseModel):
     type: Optional[str] = None                # 資產種類：土地或建物
-    agency_id: Optional[int] = None           # 管理機關ID
-    district_id: Optional[int] = None         # 行政區ID
+    agency_id: Optional[str] = None           # 管理機關ID
+    district_id: Optional[str] = None         # 行政區ID
     section: Optional[str] = None             # 地段
     address: Optional[str] = None             # 地址
     coordinates: Optional[str] = None          # 接收 "(120.123, 23.456)" 格式的字串

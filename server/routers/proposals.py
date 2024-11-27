@@ -9,9 +9,9 @@ router = APIRouter(prefix="/api/v1/proposals", tags=["資產提報與需求"])
 
 # 資產提報請求模型
 class AssetProposalCreate(BaseModel):
-    managing_agency: str                # 改為接收機關名稱
+    agency_id: str                
     target_name: Optional[str] = None
-    district: str                       # 改為接收行政區名稱
+    district_id: str               
     section: str
     lot_number: str
     address: Optional[str] = None
@@ -68,12 +68,12 @@ class AssetProposalUpdate(BaseModel):
 
 # 需求資產請求模型
 class AssetRequirementCreate(BaseModel):
-    agency_id: int
+    agency_id: str
     purpose: str                        # 需求用途
     asset_type: str                     # 資產種類：土地/建物
     preferred_floor: Optional[str] = None
     area: Optional[float] = None
-    district_id: Optional[int] = None
+    district_id: Optional[str] = None
     urgency_note: Optional[str] = None
     funding_source: Optional[str] = None
     reporter_email: str
@@ -118,44 +118,25 @@ def init_router(supabase: Client) -> APIRouter:
     async def create_asset_proposal(proposal: AssetProposalCreate):
         """建立新的資產提報"""
         try:
-            
-            # 查詢機關 ID
-            agency_response = supabase.table('agencies') \
-                .select("id") \
-                .eq('name', proposal.managing_agency) \
-                .single() \
-                .execute()
-                
-            if not agency_response.data:
-                raise HTTPException(status_code=400, detail=f"找不到機關：{proposal.managing_agency}")
-                
-            # 查詢行政區 ID
-            district_response = supabase.table('districts') \
-                .select("id") \
-                .eq('name', proposal.district) \
-                .single() \
-                .execute()
-                
-            if not district_response.data:
-                raise HTTPException(status_code=400, detail=f"找不到行政區：{proposal.district}")
+            # 檢查 district_id 是否存在
+            if proposal.district_id:
+                district = supabase.table('districts').select("*").eq('id', proposal.district_id).execute()
+                if not district.data:
+                    raise HTTPException(status_code=404, detail="找不到指定的行政區")
 
-            # 印出完整的請求內容
-            # print("完整請求內容：")
-            # print("JSON:", proposal.model_dump_json(indent=2))
+            # 檢查 agency_id 是否存在
+            if proposal.agency_id:
+                agency = supabase.table('agencies').select("*").eq('id', proposal.agency_id).execute()
+                if not agency.data:
+                    raise HTTPException(status_code=404, detail="找不到指定的管理機關")
+
             # 準備插入資料
             insert_data = proposal.model_dump()
-            # 替換機關和行政區名稱為對應的 ID
-            insert_data['agency_id'] = agency_response.data['id']
-            insert_data['district_id'] = district_response.data['id']
-            # 移除原始的欄位
-            insert_data.pop('managing_agency')
-            insert_data.pop('district')
-            
-            insert_data['created_at'] = datetime.now().isoformat()
-            insert_data['updated_at'] = datetime.now().isoformat()
+            insert_data["created_at"] = datetime.now().isoformat()
+            insert_data["updated_at"] = datetime.now().isoformat()
             insert_data['proposal_status'] = '提案中'
 
-            # print("要插入的資料：", insert_data)
+            print("要插入的資料：", insert_data)
             
             response = supabase.table('test_asset_proposals').insert(insert_data).execute()
             return response.data[0]
