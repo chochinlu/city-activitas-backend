@@ -314,8 +314,23 @@ def init_router(supabase: Client) -> APIRouter:
                 raise HTTPException(status_code=404, detail="找不到指定的圖片")
             
             # 2. 從 Storage 刪除圖片
-            file_path = image.data[0]["storage_url"].split("/")[-1]
-            supabase.storage.from_('assets').remove([file_path])
+            storage_url = image.data[0]["storage_url"]
+            try:
+                # 處理 URL 格式：
+                # https://xxx.supabase.co/storage/v1/object/public/assets/assets/41/file.png?query=123
+                url_parts = storage_url.split("/storage/v1/object/public/assets/")[1]
+                file_path = url_parts.split("?")[0]  # 移除查詢參數
+                # 正確的file_path: assets/41/file.png
+                print(f"Deleting file: {file_path}")
+                
+                # 從 Storage 刪除檔案
+                supabase.storage.from_('assets').remove([file_path])
+            except Exception as e:
+                print(f"Error parsing storage URL: {storage_url}")
+                raise HTTPException(
+                    status_code=500, 
+                    detail=f"無法解析儲存路徑: {str(e)}"
+                )
             
             # 3. 從資料庫刪除記錄
             response = supabase.table('test_asset_images').delete().eq('id', image_id).execute()
