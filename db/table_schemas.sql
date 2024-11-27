@@ -659,4 +659,38 @@ COMMENT ON COLUMN asset_requirements.funding_source IS '經費來源';
 COMMENT ON COLUMN asset_requirements.requirement_status IS '需求狀態：提案中、需要修改、不執行、已核准';
 
 
+-- // 資產圖片管理表
+CREATE TABLE asset_images (
+    id SERIAL PRIMARY KEY,
+    asset_id INTEGER NOT NULL REFERENCES assets(id),
+    storage_url TEXT NOT NULL,           -- 完整的圖片 URL
+    file_name VARCHAR(255) NOT NULL,     -- 原始檔名
+    file_size INTEGER,                   -- 檔案大小 (bytes)
+    mime_type VARCHAR(100),              -- 檔案類型 (image/jpeg, image/png 等)
+    title VARCHAR(255) NOT NULL,         -- 圖片標題
+    description TEXT,                    -- 圖片說明
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    editor_email VARCHAR(255) NOT NULL,  -- 修改人 email
+    
+    -- 確保儲存 URL 不會重複
+    CONSTRAINT unique_storage_url UNIQUE (storage_url)
+);
+
+-- 建立索引
+CREATE INDEX idx_asset_images_asset_id ON asset_images(asset_id);
+CREATE INDEX idx_asset_images_editor_email ON asset_images(editor_email);
+CREATE INDEX idx_asset_images_created_at ON asset_images(created_at);
+
+-- 添加欄位註釋
+COMMENT ON TABLE asset_images IS '資產圖片管理表';
+COMMENT ON COLUMN asset_images.storage_url IS '圖片的完整 URL，可以是 Supabase Storage 或其他來源';
+COMMENT ON COLUMN asset_images.file_name IS '原始檔名';
+COMMENT ON COLUMN asset_images.file_size IS '檔案大小 (bytes)';
+COMMENT ON COLUMN asset_images.mime_type IS '檔案類型 (image/jpeg, image/png 等)';
+COMMENT ON COLUMN asset_images.title IS '圖片標題';
+COMMENT ON COLUMN asset_images.description IS '圖片說明';
+COMMENT ON COLUMN asset_images.editor_email IS '最後修改人的 email';
+
+
 
