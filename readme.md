@@ -15,6 +15,7 @@
 ```env
 SUPABASE_URL=<supabase url>
 SUPABASE_ANON_KEY=<supabase anon key>
+SUPABASE_SERVICE_ROLE_KEY=<supabase admin key>
 ```
 
 然後: 

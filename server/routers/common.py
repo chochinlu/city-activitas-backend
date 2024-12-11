@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, status
 from supabase import Client
 from typing import Optional
 from datetime import datetime
@@ -92,8 +92,21 @@ def init_router(supabase: Client) -> APIRouter:
 
     @router.get("/districts")
     async def get_districts():
-        response = supabase.table('test_districts').select("*").execute()
-        return response.data
+        try:
+            response = supabase.table('test_districts').select("*").execute()
+            return response.data
+        except Exception as e:
+            if 'JWT expired' in str(e):
+                # 1. 重新取得 token
+                # 2. 重試請求
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="認證已過期，請重新登入"
+                )
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=str(e)
+            )
 
     @router.get("/districts/{id}")
     async def get_district(id: int):
